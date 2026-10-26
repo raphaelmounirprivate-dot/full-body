@@ -14,7 +14,7 @@ with ZipFile(out/'Mon-Coach-Sport-sources.zip','w',ZIP_DEFLATED) as archive:
     for name in ['app/src','docs','scripts','gradle']:
         for path in (root/name).rglob('*'):
             if path.is_file() and '__pycache__' not in path.parts: archive.write(path,path.relative_to(root))
-    for name in ['AGENTS.md','README.md','.gitignore','settings.gradle.kts','build.gradle.kts','gradle.properties','gradlew','gradlew.bat','app/build.gradle.kts']:
+    for name in ['AGENTS.md','README.md','CHANGELOG.md','.gitignore','.gitattributes','settings.gradle.kts','build.gradle.kts','gradle.properties','gradlew','gradlew.bat','app/build.gradle.kts']:
         archive.write(root/name,name)
 checksums='\n'.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name for p in sorted(out.iterdir()) if p.suffix in ['.apk','.aab','.zip'])+'\n'
 (out/'SHA256SUMS.txt').write_text(checksums,encoding='ascii')

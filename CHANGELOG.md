@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 0.4.0 — 26 octobre 2026
+
+- Nouvelle présentation de la séance : bandeau bleu nuit avec avancement réel, illustrations et exercices dépliables.
+- Échauffement accessible à la demande ; bouton de validation bleu et saisie centrée sur la prochaine série.
+- Séries enregistrées résumées sur une ligne et modifiables. Brouillons conservés quand on change d’exercice.
+- Programmes, prescriptions, historique et formats de sauvegarde conservés.
+
 ## 0.3.1 — 26 octobre 2026
 
 - Retrait du bloc « À propos du guide » de l’accueil.

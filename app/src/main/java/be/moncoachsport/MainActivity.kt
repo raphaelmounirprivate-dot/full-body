@@ -83,7 +83,16 @@ fun CoachApp(vm: CoachViewModel = viewModel()) {
                             },
                             icon = { Icon(icons[i], null) },
                             label = {
-                                Text(if(t=="Progression" && androidx.compose.ui.platform.LocalDensity.current.fontScale>1.2f) "Progrès" else t, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                Text(
+                                    if (
+                                        t == "Progression" &&
+                                            androidx.compose.ui.platform.LocalDensity.current
+                                                .fontScale > 1.2f
+                                    )
+                                        "Progrès"
+                                    else t,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                )
                             },
                         )
                     }
@@ -207,7 +216,10 @@ fun GuideExportButton() {
                     }
                 }
         }
-    OutlinedButton(onClick = { save.launch("Programme_Jims_Namur_images_uniformisees.pdf") },modifier=Modifier.fillMaxWidth()) {
+    OutlinedButton(
+        onClick = { save.launch("Programme_Jims_Namur_images_uniformisees.pdf") },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Text("Enregistrer le guide complet · 31 pages")
     }
 }
@@ -264,18 +276,108 @@ private fun Workout(vm: CoachViewModel, sessions: List<Training>) {
         }
         return
     }
+    val exercises = vm.exercisesFor(active.program)
+    val plan = Programs.plan(active, exercises)
+    var expandedSlot by rememberSaveable(active.id) { mutableStateOf(plan.firstOrNull()?.id) }
+    val plannedSets =
+        plan.sumOf { p ->
+            val e = Programs.exercise(p, active, exercises)
+            if (e.id in active.skipped) 0 else e.sets
+        }
+    val completedSets =
+        plan.sumOf { p ->
+            val e = Programs.exercise(p, active, exercises)
+            if (e.id in active.skipped) 0
+            else
+                (0 until e.sets).count { index ->
+                    active.sets.any { it.exerciseId == e.id && it.index == index && it.done }
+                }
+        }
     LazyColumn(
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Heading(
-                "En cours · sauvegarde locale",
-                "Séance ${active.template}",
-                "${Programs.title(active.program)}${if(active.program==Programs.CYCLE) " · S${active.week}" else ""} · ${active.sets.count{it.done}} séries validées",
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Séance ${active.template}",
+                        Modifier.weight(1f),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Icon(
+                        Icons.Outlined.CheckCircle,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Enregistrée\nlocalement",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Surface(
+                    color = Color(0xFF0A203B),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            "${Programs.title(active.program)}${if(active.program==Programs.CYCLE) " · Semaine ${active.week}" else ""}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(0xFFC4DDFF),
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                "$completedSets / $plannedSets séries",
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text("${plan.size} exercices", color = Color(0xFFC4DDFF))
+                        }
+                        LinearProgressIndicator(
+                            progress = {
+                                if (plannedSets == 0) 0f else completedSets.toFloat() / plannedSets
+                            },
+                            modifier = Modifier.fillMaxWidth().height(6.dp),
+                            color = Color(0xFF80B6FF),
+                            trackColor = Color(0xFF2B435E),
+                        )
+                    }
+                }
+            }
         }
-        item { WarmupText(active.program) }
+        item {
+            var warmupOpen by rememberSaveable(active.id) { mutableStateOf(false) }
+            Column {
+                TextButton(
+                    onClick = { warmupOpen = !warmupOpen },
+                    contentPadding = PaddingValues(horizontal = 0.dp),
+                ) {
+                    Icon(Icons.Outlined.PlayArrow, null)
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "Préparer mon échauffement",
+                        Modifier.weight(1f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                    )
+                    Icon(
+                        if (warmupOpen) Icons.Outlined.KeyboardArrowUp
+                        else Icons.Outlined.KeyboardArrowDown,
+                        null,
+                    )
+                }
+                if (warmupOpen) WarmupText(active.program)
+            }
+        }
         if (end > 0 || paused > 0)
             item {
                 Panel("Repos · ${left/60}:${(left%60).toString().padStart(2,'0')}") {
@@ -298,9 +400,19 @@ private fun Workout(vm: CoachViewModel, sessions: List<Training>) {
                     }
                 }
             }
-        items(Programs.plan(active, vm.exercisesFor(active.program)), key = { it.id }) { p ->
-            val exercise = Programs.exercise(p, active, vm.exercisesFor(active.program))
-            ExerciseLog(exercise, p, active, sessions, vm)
+        items(plan, key = { it.id }) { p ->
+            val exercise = Programs.exercise(p, active, exercises)
+            ExerciseLog(
+                exercise,
+                p,
+                active,
+                sessions,
+                vm,
+                plan.indexOf(p) + 1,
+                expandedSlot == p.id,
+            ) {
+                expandedSlot = if (expandedSlot == p.id) null else p.id
+            }
         }
         item { Summary(vm, active) }
     }
@@ -313,65 +425,125 @@ private fun ExerciseLog(
     active: Training,
     sessions: List<Training>,
     vm: CoachViewModel,
+    position: Int,
+    expanded: Boolean,
+    toggle: () -> Unit,
 ) {
     val previous =
         sessions
             .filter { it.finished != null && it.program == active.program }
             .lastOrNull { t -> t.sets.any { it.exerciseId == e.id } }
-    Panel(e.name) {
-        Text(
-            "${e.sets} × ${e.min}–${e.max} ${e.unit} · " +
-                if (e.rest > 0)
-                    "repos ${p.restMin}${if(p.restMax!=p.restMin) "–${p.restMax}" else ""} s"
-                else "enchaîné en superset"
-        )
-        Text(
-            "RIR : répétitions encore possibles à la fin de la série.",
-            style = MaterialTheme.typography.bodySmall,
-        )
-        ExerciseSheetButton(e)
-        if (e.id == "F5")
-            Text(
-                if (active.program == Programs.CYCLE) "Par bras ; repos après les deux bras."
-                else "Par bras"
-            )
-        if (active.program == Programs.LEGACY && e.id in listOf("F12", "F13"))
-            Text(
-                "Superset : enchaîner curl et extension. Aucun repos chiffré n’est fourni entre les deux."
-            )
-        if (active.program == Programs.LEGACY && e.id == "F17")
-            Text(
-                "Source : 6 × (30 s à fond / 30 s repos), résistance 4–6. Adaptez à votre capacité."
-            )
-        if (p.optional) {
-            Text("Exercice facultatif")
-            OutlinedButton(onClick = { vm.skip(e.id) }) {
-                Text(
-                    if (e.id in active.skipped) "Réintégrer cet exercice" else "Sauter cet exercice"
+    val completed =
+        (0 until e.sets).count { index ->
+            active.sets.any { it.exerciseId == e.id && it.index == index && it.done }
+        }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (expanded) MaterialTheme.colorScheme.surface
+                    else MaterialTheme.colorScheme.surfaceContainer
+            ),
+        border =
+            if (expanded) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .clickable(
+                        onClickLabel = if (expanded) "Replier ${e.name}" else "Ouvrir ${e.name}",
+                        onClick = toggle,
+                    )
+                    .semantics {
+                        contentDescription =
+                            if (expanded) "Replier ${e.name}" else "Ouvrir ${e.name}"
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                ExerciseThumbnail(e, Modifier.size(if (expanded) 96.dp else 72.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        "Exercice $position · ${if (e.id in active.skipped) "sauté" else if (completed == e.sets) "terminé" else "$completed / ${e.sets} séries"}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        e.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Icon(
+                    if (expanded) Icons.Outlined.KeyboardArrowUp
+                    else Icons.Outlined.KeyboardArrowDown,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
-        val slot = Programs.plan(active, vm.exercises).indexOf(p)
-        if (active.program == Programs.CYCLE) VariantChoices(active, slot, vm)
-        if (
-            Programs.extraAllowed(active, slot) && (active.week in 5..6 || e.id in active.extraSets)
-        ) {
-            OutlinedButton(onClick = { vm.extra(e.id) }) {
+            Text(
+                "${e.sets} × ${e.min}–${e.max} ${e.unit} · " +
+                    if (e.rest > 0)
+                        "repos ${p.restMin}${if(p.restMax!=p.restMin) "–${p.restMax}" else ""} s"
+                    else "enchaîné en superset",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ExerciseSheetButton(e, compact = true)
+            if (!expanded) return@Column
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Text(
+                "RIR : répétitions encore possibles à la fin de la série.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (e.id == "F5")
                 Text(
-                    if (e.id in active.extraSets) "Revenir à deux séries"
-                    else "Ajouter une 3e série facultative"
+                    if (active.program == Programs.CYCLE) "Par bras ; repos après les deux bras."
+                    else "Par bras"
                 )
+            if (active.program == Programs.LEGACY && e.id in listOf("F12", "F13"))
+                Text(
+                    "Superset : enchaîner curl et extension. Aucun repos chiffré n’est fourni entre les deux."
+                )
+            if (active.program == Programs.LEGACY && e.id == "F17")
+                Text(
+                    "Source : 6 × (30 s à fond / 30 s repos), résistance 4–6. Adaptez à votre capacité."
+                )
+            if (p.optional) {
+                Text("Exercice facultatif")
+                OutlinedButton(onClick = { vm.skip(e.id) }) {
+                    Text(
+                        if (e.id in active.skipped) "Réintégrer cet exercice"
+                        else "Sauter cet exercice"
+                    )
+                }
             }
-        }
-        if (e.id in active.skipped) {
-            Text("Exercice sauté pour cette séance.")
-            return@Panel
-        }
-        RestControls(p, active, vm)
-        repeat(e.sets) { index ->
-            val stored = active.sets.firstOrNull { it.exerciseId == e.id && it.index == index }
-            val last = previous?.sets?.firstOrNull { it.exerciseId == e.id && it.index == index }
-            SetEditor(e, p, index, stored, last, active, sessions, vm) { vm.log(it) }
+            val slot = Programs.plan(active, vm.exercises).indexOf(p)
+            if (active.program == Programs.CYCLE) VariantChoices(active, slot, vm)
+            if (
+                Programs.extraAllowed(active, slot) &&
+                    (active.week in 5..6 || e.id in active.extraSets)
+            ) {
+                OutlinedButton(onClick = { vm.extra(e.id) }) {
+                    Text(
+                        if (e.id in active.extraSets) "Revenir à deux séries"
+                        else "Ajouter une 3e série facultative"
+                    )
+                }
+            }
+            if (e.id in active.skipped) {
+                Text("Exercice sauté pour cette séance.")
+                return@Column
+            }
+            repeat(e.sets) { index ->
+                val stored = active.sets.firstOrNull { it.exerciseId == e.id && it.index == index }
+                val last =
+                    previous?.sets?.firstOrNull { it.exerciseId == e.id && it.index == index }
+                SetEditor(e, p, index, stored, last, active, sessions, vm) { vm.log(it) }
+            }
+            RestControls(p, active, vm)
         }
     }
 }
@@ -432,10 +604,65 @@ private fun SetEditor(
         }
     val haptic by vm.haptics.collectAsStateWithLifecycle()
     val view = androidx.compose.ui.platform.LocalView.current
-    Text(
-        "Série ${index+1}${if(stored!=null) " · enregistrée" else ""}",
-        fontWeight = FontWeight.SemiBold,
-    )
+    val nextPending =
+        (0 until e.sets).firstOrNull { i ->
+            active.sets.none { it.exerciseId == e.id && it.index == i && it.done }
+        }
+    var editing by
+        rememberSaveable(key, stored, nextPending) {
+            mutableStateOf(stored == null && index == nextPending)
+        }
+    if (stored == null && !editing) {
+        TextButton(
+            onClick = { editing = true },
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(vertical = 12.dp),
+        ) {
+            Text(
+                "Série ${index+1} · à suivre",
+                Modifier.weight(1f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+            )
+            Icon(Icons.Outlined.KeyboardArrowRight, null)
+        }
+        return
+    }
+    if (stored != null && !editing) {
+        Row(
+            Modifier.fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .clickable(onClickLabel = "Corriger la série ${index+1}") { editing = true }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
+            Column(Modifier.weight(1f)) {
+                Text("Série ${index+1} · enregistrée", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    "${stored.kg} kg ${stored.loadUnit} · ${stored.reps} ${e.unit} · RIR ${stored.rir}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.Outlined.Edit,
+                "Corriger la série ${index+1}",
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        return
+    }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "Série ${index+1}${if(stored!=null) " · enregistrée" else ""}",
+            Modifier.weight(1f),
+            fontWeight = FontWeight.SemiBold,
+        )
+        TextButton(onClick = { details = !details }) {
+            Text("Machine et réglages", style = MaterialTheme.typography.labelMedium)
+        }
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         NumberField(
             kg,
@@ -465,7 +692,6 @@ private fun SetEditor(
             Modifier.weight(1f),
         )
     }
-    TextButton(onClick = { details = !details }) { Text("Machine et réglages") }
     if (details) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("total", "par côté").forEach { value ->
@@ -531,7 +757,7 @@ private fun SetEditor(
             "Deux passages consécutifs réussis avec la réserve prévue et les mêmes réglages : envisagez le plus petit incrément disponible, sans obligation.",
             color = MaterialTheme.colorScheme.primary,
         )
-    OutlinedButton(
+    Button(
         onClick = {
             val s =
                 LoggedSet(

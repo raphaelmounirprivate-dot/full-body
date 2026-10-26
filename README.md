@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.3.1
+# Mon Coach Sport — Android 0.4.0
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -10,11 +10,13 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK 0.3.1 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.3.1). Il s’agit d’une version debug destinée aux essais locaux, pour Android 8.0 ou plus récent. Le dépôt et ses téléchargements sont privés.
+Pour tester l’application : [télécharger l’APK 0.4.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.4.0). Il s’agit d’une version debug destinée aux essais locaux, pour Android 8.0 ou plus récent. Le dépôt et ses téléchargements sont privés.
 
 | Accueil | Séance | Fiche d’exercice |
 | --- | --- | --- |
 | ![Accueil](docs/screenshots/accueil.png) | ![Séance](docs/screenshots/seance.png) | ![Fiche](docs/screenshots/fiche.png) |
+
+Voir aussi [l’aperçu compact de la séance](docs/screenshots/seance-apercu.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). Validation de cette version : [résultats 0.4.0](docs/validation-0.4.0.md).
 
 ## Développement
 
@@ -22,6 +24,7 @@ Le projet est développé par étapes, en conservant les séances existantes et 
 
 ## Fonctionnalités
 
+- Séance guidée avec avancement des séries, illustrations, exercices dépliables et une série proposée à la fois. Les séries enregistrées se résument sur une ligne et restent modifiables ; les brouillons sont conservés quand on replie un exercice.
 - Bouton « Voir la fiche » sur chaque exercice de la séance et du catalogue, y compris les options sautées : illustration agrandissable et consignes dans une fenêtre défilante. Fermer la fiche conserve les saisies.
 - Cycle de huit semaines : A/B/C, deux séries, plages de répétitions/repos propres à chaque séance, exercices facultatifs, repères cardio et RIR.
 - Deux programmes séparés : les anciennes séances gardent le programme illustré initial. Programme, semaine et options sont enregistrés dans chaque séance.

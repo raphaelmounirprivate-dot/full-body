@@ -27,6 +27,7 @@ class WorkoutUiTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Séance A").fetchSemanticsNodes().isNotEmpty()
         }
+        openExercise("Planche")
         compose
             .onNode(
                 SemanticsMatcher.keyIsDefined(
@@ -102,6 +103,7 @@ class WorkoutUiTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Séance A").fetchSemanticsNodes().isNotEmpty()
         }
+        openExercise("Élévations latérales à la poulie")
         compose
             .onNode(
                 SemanticsMatcher.keyIsDefined(
@@ -110,6 +112,10 @@ class WorkoutUiTest {
             )
             .performScrollToNode(hasText("Sauter cet exercice"))
         compose.onNodeWithText("Sauter cet exercice").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Réintégrer cet exercice").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Exercice sauté pour cette séance.").performScrollTo()
         compose.onNodeWithText("Exercice sauté pour cette séance.").assertExists()
         compose
             .onNodeWithContentDescription("Voir la fiche de Élévations latérales à la poulie")
@@ -163,5 +169,54 @@ class WorkoutUiTest {
         compose.onNodeWithText("Installer").assertExists()
         compose.onNodeWithText("Fermer la fiche").performClick()
         compose.onNodeWithText("Les mouvements.").assertExists()
+    }
+
+    private fun openExercise(name: String) {
+        compose
+            .onNode(
+                SemanticsMatcher.keyIsDefined(
+                    androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex
+                )
+            )
+            .performScrollToNode(hasContentDescription("Ouvrir $name"))
+        compose.onNodeWithContentDescription("Ouvrir $name").performClick()
+    }
+
+    @Test
+    fun foldingExercisesKeepsDraftAndRecordedSeriesCanBeCorrected() {
+        compose.onNodeWithText("Commencer ma séance").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onAllNodesWithText("kg total")[0].performTextReplacement("25")
+        compose.runOnUiThread {
+            compose.activity
+                .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
+            compose.activity.currentFocus?.clearFocus()
+        }
+        openExercise("Chest press guidée")
+        openExercise("Presse à cuisses")
+        compose.onAllNodesWithText("kg total")[0].assertTextContains("25")
+        compose.onAllNodesWithText("Valider la série")[0].performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Série 1 · enregistrée").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithContentDescription("Corriger la série 1").performScrollTo().performClick()
+        compose.onAllNodesWithText("kg total")[0].assertTextContains("25")
+        compose.onAllNodesWithText("kg total")[0].performTextReplacement("30")
+        compose.runOnUiThread {
+            compose.activity
+                .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
+            compose.activity.currentFocus?.clearFocus()
+        }
+        compose.onNodeWithText("Enregistrer la correction").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("30.0 kg total", substring = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
     }
 }
