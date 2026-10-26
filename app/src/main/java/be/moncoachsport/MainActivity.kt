@@ -13,6 +13,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -250,8 +251,9 @@ private fun LoadChart(values: List<Double>, label: String) {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun Workout(vm: CoachViewModel, sessions: List<Training>) {
-    val active = sessions.firstOrNull { it.finished == null }
+    val active = sessions.firstOrNull { it.isActive }
     val program by vm.program.collectAsStateWithLifecycle()
     val timer by vm.timer.collectAsStateWithLifecycle()
     val end = timer.first
@@ -271,8 +273,12 @@ private fun Workout(vm: CoachViewModel, sessions: List<Training>) {
             Text(Programs.title(program))
             Text("La rotation avance uniquement quand vous terminez une séance.")
             Button(onClick = { vm.start() }) {
-                Text("Commencer la séance ${Programs.next(program,sessions)}")
+                val next = Programs.next(program, sessions)
+                Text(
+                    "${if (sessions.any { it.program == program && it.template == next && it.paused }) "Reprendre" else "Commencer"} la séance $next"
+                )
             }
+            SessionChooser(vm, sessions, program, null)
         }
         return
     }
@@ -293,32 +299,31 @@ private fun Workout(vm: CoachViewModel, sessions: List<Training>) {
                     active.sets.any { it.exerciseId == e.id && it.index == index && it.done }
                 }
         }
+    val workoutScroll = rememberLazyListState()
+    LaunchedEffect(active.id) { workoutScroll.scrollToItem(0) }
     LazyColumn(
+        state = workoutScroll,
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        stickyHeader {
+            Surface(color = MaterialTheme.colorScheme.background) {
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         "Séance ${active.template}",
                         Modifier.weight(1f),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                     )
-                    Icon(
-                        Icons.Outlined.CheckCircle,
-                        null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "Enregistrée\nlocalement",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    SessionChooser(vm, sessions, active.program, active)
                 }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Surface(
                     color = Color(0xFF0A203B),
                     contentColor = Color.White,
@@ -432,7 +437,8 @@ private fun ExerciseLog(
     val previous =
         sessions
             .filter { it.finished != null && it.program == active.program }
-            .lastOrNull { t -> t.sets.any { it.exerciseId == e.id } }
+            .filter { t -> t.sets.any { it.exerciseId == e.id } }
+            .maxByOrNull { it.finished!! }
     val completed =
         (0 until e.sets).count { index ->
             active.sets.any { it.exerciseId == e.id && it.index == index && it.done }
@@ -541,7 +547,7 @@ private fun ExerciseLog(
                 val stored = active.sets.firstOrNull { it.exerciseId == e.id && it.index == index }
                 val last =
                     previous?.sets?.firstOrNull { it.exerciseId == e.id && it.index == index }
-                SetEditor(e, p, index, stored, last, active, sessions, vm) { vm.log(it) }
+                SetEditor(e, p, index, stored, last, active, sessions, vm) { vm.log(it, active.id) }
             }
             RestControls(p, active, vm)
         }
@@ -561,18 +567,19 @@ private fun SetEditor(
     save: (LoggedSet) -> Unit,
 ) {
     val key = "${e.id}-$index"
+    val stateKey = "${active.id}-$key"
     var kg by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(
                 active.drafts["$key-kg"] ?: (stored?.kg ?: previous?.kg)?.toString() ?: ""
             )
         }
     var reps by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(active.drafts["$key-reps"] ?: (stored?.reps ?: e.min).toString())
         }
     var rir by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(
                 active.drafts["$key-rir"]
                     ?: (stored?.rir
@@ -583,21 +590,21 @@ private fun SetEditor(
             )
         }
     var machine by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(
                 active.drafts["$key-machine"] ?: stored?.machine ?: previous?.machine ?: ""
             )
         }
     var setting by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(
                 active.drafts["$key-setting"] ?: stored?.setting ?: previous?.setting ?: ""
             )
         }
     var error by remember { mutableStateOf("") }
-    var details by rememberSaveable(key) { mutableStateOf(false) }
+    var details by rememberSaveable(stateKey) { mutableStateOf(false) }
     var unit by
-        rememberSaveable(key, stored) {
+        rememberSaveable(stateKey, stored) {
             mutableStateOf(
                 active.drafts["$key-unit"] ?: stored?.loadUnit ?: previous?.loadUnit ?: "total"
             )
@@ -609,7 +616,7 @@ private fun SetEditor(
             active.sets.none { it.exerciseId == e.id && it.index == i && it.done }
         }
     var editing by
-        rememberSaveable(key, stored, nextPending) {
+        rememberSaveable(stateKey, stored, nextPending) {
             mutableStateOf(stored == null && index == nextPending)
         }
     if (stored == null && !editing) {
@@ -668,7 +675,7 @@ private fun SetEditor(
             kg,
             {
                 kg = it
-                vm.saveDraft("$key-kg", it)
+                vm.saveDraft("$key-kg", it, active.id)
             },
             "kg $unit",
             Modifier.weight(1f),
@@ -677,7 +684,7 @@ private fun SetEditor(
             reps,
             {
                 reps = it
-                vm.saveDraft("$key-reps", it)
+                vm.saveDraft("$key-reps", it, active.id)
             },
             e.unit,
             Modifier.weight(1f),
@@ -686,7 +693,7 @@ private fun SetEditor(
             rir,
             {
                 rir = it
-                vm.saveDraft("$key-rir", it)
+                vm.saveDraft("$key-rir", it, active.id)
             },
             "RIR",
             Modifier.weight(1f),
@@ -699,7 +706,7 @@ private fun SetEditor(
                     selected = unit == value,
                     onClick = {
                         unit = value
-                        vm.saveDraft("$key-unit", value)
+                        vm.saveDraft("$key-unit", value, active.id)
                     },
                     label = { Text("kg $value") },
                 )
@@ -709,7 +716,7 @@ private fun SetEditor(
             machine,
             {
                 machine = it
-                vm.saveDraft("$key-machine", it)
+                vm.saveDraft("$key-machine", it, active.id)
             },
             label = { Text("Machine / identifiant") },
             modifier = Modifier.fillMaxWidth(),
@@ -718,22 +725,24 @@ private fun SetEditor(
             setting,
             {
                 setting = it
-                vm.saveDraft("$key-setting", it)
+                vm.saveDraft("$key-setting", it, active.id)
             },
             label = { Text("Siège, prise, réglages") },
             modifier = Modifier.fillMaxWidth(),
         )
     }
     val matched =
-        sessions.lastOrNull { t ->
-            t.finished != null &&
-                t.program == active.program &&
-                t.sets.any {
-                    it.exerciseId == e.id &&
-                        it.machine.trim() == machine.trim() &&
-                        it.loadUnit == unit
-                }
-        }
+        sessions
+            .filter { t ->
+                t.finished != null &&
+                    t.program == active.program &&
+                    t.sets.any {
+                        it.exerciseId == e.id &&
+                            it.machine.trim() == machine.trim() &&
+                            it.loadUnit == unit
+                    }
+            }
+            .maxByOrNull { it.finished!! }
     if (machine.isNotBlank()) {
         val lastValues =
             matched?.sets?.filter {
@@ -823,7 +832,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
             machine,
             {
                 machine = it
-                vm.saveDraft("cardioMachine", it)
+                vm.saveDraft("cardioMachine", it, t.id)
             },
             label = { Text("Appareil cardio") },
             modifier = Modifier.fillMaxWidth(),
@@ -833,7 +842,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
                 cardio,
                 {
                     cardio = it
-                    vm.saveDraft("cardio", it)
+                    vm.saveDraft("cardio", it, t.id)
                 },
                 "Minutes",
                 Modifier.weight(1f),
@@ -842,7 +851,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
                 intensity,
                 {
                     intensity = it
-                    vm.saveDraft("intensity", it)
+                    vm.saveDraft("intensity", it, t.id)
                 },
                 "Effort /10",
                 Modifier.weight(1f),
@@ -852,7 +861,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
             energy,
             {
                 energy = it
-                vm.saveDraft("energy", it)
+                vm.saveDraft("energy", it, t.id)
             },
             "Énergie /10",
             Modifier.fillMaxWidth(),
@@ -861,7 +870,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
             pain,
             {
                 pain = it
-                vm.saveDraft("pain", it)
+                vm.saveDraft("pain", it, t.id)
             },
             label = { Text("Inconfort / douleur") },
             modifier = Modifier.fillMaxWidth(),
@@ -870,7 +879,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
             notes,
             {
                 notes = it
-                vm.saveDraft("notes", it)
+                vm.saveDraft("notes", it, t.id)
             },
             label = { Text("Notes / prochaine décision") },
             modifier = Modifier.fillMaxWidth(),
@@ -892,7 +901,7 @@ private fun Summary(vm: CoachViewModel, t: Training) {
                 TextButton(
                     onClick = {
                         confirm = false
-                        vm.finish(notes, cardio, energy, pain, machine, intensity)
+                        vm.finish(notes, cardio, energy, pain, machine, intensity, t.id)
                     }
                 ) {
                     Text("Terminer")

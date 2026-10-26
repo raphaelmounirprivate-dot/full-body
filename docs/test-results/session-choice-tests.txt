@@ -1,0 +1,11 @@
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+
+be.moncoachsport.StorageTest:...............
+be.moncoachsport.WorkoutUiTest:...........
+
+Time: 29.101
+
+OK (26 tests)

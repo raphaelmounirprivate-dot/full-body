@@ -16,6 +16,8 @@ Construire une application Android personnelle en français pour suivre un progr
 
 Room utilise une migration explicite de la version 1 vers la version 2. Une ancienne séance conserve son programme, sa semaine, ses options, son unité et ses paramètres. Une suggestion de progression ne modifie jamais automatiquement la charge.
 
+Depuis 0.5.0, `Training.paused` est un champ optionnel du payload JSON existant, avec valeur par défaut `false` : aucune migration de table supplémentaire. `SportRepository.activate` met la séance précédente en pause et active la suivante dans une transaction. Une reprise conserve l’identité et tous les paramètres de la séance. Le minuteur est annulé avant le changement ; les saisies et validations portent l’identifiant de leur séance pour éviter une écriture tardive dans une autre séance. JSON/CSV format 3 conservent les pauses, les anciens formats restent importables. La rotation et les derniers passages utilisent la date de fin réelle.
+
 ## Construire sur un autre poste
 
 Installer Android Studio, le SDK Android 36 et un JDK 17. Ouvrir la racine du dépôt dans Android Studio et synchroniser Gradle. Les dépendances doivent être téléchargées lors de la première compilation ; l’application installée fonctionne ensuite hors ligne.
@@ -45,7 +47,7 @@ python scripts/verify_guide.py
 
 Les tests Android doivent utiliser un émulateur dédié : certains effacent les données de l’application. Ne pas les lancer sur le téléphone ou l’émulateur contenant les séances personnelles.
 
-La validation de la version 0.4.0 rapporte une compilation APK/AAB réussie, 22 tests JVM, 20 tests Android et 11 contrôles Python réussis, ainsi qu’un lint sans erreur bloquante. Voir `validation-0.4.0.md`. Les contrôles des versions précédentes sont conservés dans `validation-0.3.1.md` et `validation.md` : ces résultats décrivent les exécutions locales documentées, pas une intégration continue GitHub.
+La validation de la version 0.5.0 rapporte une compilation APK/AAB réussie, 24 tests JVM, 26 tests Android et 11 contrôles Python réussis, ainsi qu’un lint sans erreur bloquante. Voir `validation-0.5.0.md`. Les contrôles des versions précédentes sont conservés dans `validation-0.4.0.md`, `validation-0.3.1.md` et `validation.md` : ces résultats décrivent les exécutions locales documentées, pas une intégration continue GitHub.
 
 ## Suite du développement
 

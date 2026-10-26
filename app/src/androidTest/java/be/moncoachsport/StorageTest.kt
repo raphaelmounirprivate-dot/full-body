@@ -12,6 +12,145 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class StorageTest {
     @Test
+    fun switchingSessionsKeepsAllDataAndOneActiveSession() = runBlocking {
+        val repo = SportRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+        repo.erase()
+        try {
+            val a =
+                Training(
+                    "paused-a",
+                    "A",
+                    1000,
+                    program = Programs.CYCLE,
+                    week = 5,
+                    extraSets = setOf("F1"),
+                    skipped = setOf("F5"),
+                    alternatives = mapOf("F6" to "F19"),
+                    sets =
+                        listOf(
+                            LoggedSet(
+                                "F1",
+                                0,
+                                20.0,
+                                12,
+                                3,
+                                "Presse",
+                                "Siège 4",
+                                loadUnit = "par côté",
+                            )
+                        ),
+                    drafts = mapOf("F1-1-kg" to "22,5", "notes" to "Reprendre demain"),
+                )
+            val b = Training("active-b", "B", 2000, program = Programs.CYCLE, week = 6)
+            repo.activate(a)
+            repo.activate(b)
+            val switched = repo.sessions.first()
+            assertEquals(a.copy(paused = true), switched.first { it.id == a.id })
+            assertEquals(b, switched.single { it.isActive })
+            repo.activate(switched.first { it.id == a.id })
+            repo.activate(a)
+            assertEquals(a, repo.sessions.first().single { it.isActive })
+            assertEquals(b.copy(paused = true), repo.sessions.first().first { it.id == b.id })
+            assertEquals(2, repo.sessions.first().size)
+            try {
+                repo.activate(a.copy(id = "duplicate"))
+                fail("Duplicate pending session accepted")
+            } catch (_: IllegalArgumentException) {}
+            assertEquals(a, repo.sessions.first().single { it.isActive })
+        } finally {
+            repo.erase()
+            repo.close()
+        }
+    }
+
+    @Test
+    fun pausedSessionsSurviveJsonAndCsvRestore() = runBlocking {
+        val repo = SportRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+        repo.erase()
+        try {
+            val sessions =
+                listOf(
+                    Training(
+                        "a",
+                        "A",
+                        1000,
+                        program = Programs.CYCLE,
+                        week = 2,
+                        paused = true,
+                        drafts = mapOf("F1-0-kg" to "25"),
+                    ),
+                    Training("b", "B", 2000, program = Programs.CYCLE, week = 3),
+                )
+            val decoded = HistoryCsv.decode(HistoryCsv.encode(sessions))
+            assertEquals(sessions, decoded)
+            repo.restore(HistoryCsv.asBackup(decoded).toString(), (1..19).map { "F$it" }.toSet())
+            assertEquals(sessions, repo.sessions.first())
+            repo.activate(repo.sessions.first().first())
+            assertEquals("a", repo.sessions.first().single { it.isActive }.id)
+            assertEquals(2, repo.sessions.first().single { it.isActive }.week)
+        } finally {
+            repo.erase()
+            repo.close()
+        }
+    }
+
+    @Test
+    fun invalidPausedBackupsAreRejectedBeforeReplacingData() = runBlocking {
+        val repo = SportRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+        repo.erase()
+        val existing = Training("keep", "A", 1000)
+        repo.save(existing)
+        try {
+            val a = Training("a", "A", 1000)
+            val invalid =
+                listOf(
+                    HistoryCsv.asBackup(listOf(a, a.copy(id = "b", template = "B"))),
+                    HistoryCsv.asBackup(listOf(a, a.copy(id = "dup", paused = true))),
+                    HistoryCsv.asBackup(listOf(a.copy(paused = true, finished = 2000))),
+                    HistoryCsv.asBackup(listOf(a.copy(paused = true))).put("version", 2),
+                )
+            invalid.forEach { backup ->
+                try {
+                    repo.restore(backup.toString(), setOf("F1"))
+                    fail("Invalid backup accepted")
+                } catch (_: IllegalArgumentException) {}
+                assertEquals(listOf(existing), repo.sessions.first())
+            }
+        } finally {
+            repo.erase()
+            repo.close()
+        }
+    }
+
+    @Test
+    fun previousJsonAndCsvFormatsRemainImportable() = runBlocking {
+        val repo = SportRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+        repo.erase()
+        try {
+            val t = Training("old", "A", 1000)
+            val json = org.json.JSONObject(Codec.encode(t)).apply { remove("paused") }
+            val backup =
+                org.json
+                    .JSONObject()
+                    .put("version", 2)
+                    .put("sessions", org.json.JSONArray().put(json))
+            repo.restore(backup.toString(), setOf("F1"))
+            assertEquals(listOf(t), repo.sessions.first())
+            val csv =
+                HistoryCsv.encode(listOf(t))
+                    .split("\r\n")
+                    .mapIndexed { i, line ->
+                        if (i == 0) line else line.replaceFirst("\"3\";", "\"2\";")
+                    }
+                    .joinToString("\r\n")
+            assertEquals(listOf(t), HistoryCsv.decode(csv))
+        } finally {
+            repo.erase()
+            repo.close()
+        }
+    }
+
+    @Test
     fun guideVariantBackupKeepsItsSeries() {
         val session =
             Training(
@@ -122,8 +261,11 @@ class StorageTest {
     @Test
     fun oldJsonDefaultsToOriginalProgram() {
         val j = org.json.JSONObject(Codec.encode(Training("v1", "A", 1000)))
-        listOf("program", "week", "skipped", "extraSets", "alternatives").forEach { j.remove(it) }
+        listOf("program", "week", "skipped", "extraSets", "alternatives", "paused").forEach {
+            j.remove(it)
+        }
         assertEquals(Programs.LEGACY, Codec.decode(j.toString()).program)
+        assertTrue(Codec.decode(j.toString()).isActive)
     }
 
     @Test

@@ -30,6 +30,8 @@ data class SessionRecord(@PrimaryKey val id: String, val payload: String)
 interface SessionDao {
     @Query("SELECT * FROM sessions") fun observe(): Flow<List<SessionRecord>>
 
+    @Query("SELECT * FROM sessions") suspend fun read(): List<SessionRecord>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(row: SessionRecord)
 
     @Query("DELETE FROM sessions") suspend fun clear()
@@ -88,6 +90,7 @@ object Codec {
                 put("template", t.template)
                 put("started", t.started)
                 put("finished", t.finished ?: JSONObject.NULL)
+                put("paused", t.paused)
                 put("notes", t.notes)
                 put("cardio", t.cardio)
                 put("energy", t.energy)
@@ -177,6 +180,7 @@ object Codec {
                 ids("skipped"),
                 ids("extraSets"),
                 alternatives,
+                if (j.has("paused")) j.getBoolean("paused") else false,
             )
             .also {
                 require(
@@ -187,6 +191,9 @@ object Codec {
                 )
                 require(it.cardio in 0..600 && it.energy in 0..10 && it.intensity in 0..10)
                 require(it.program in Programs.ids && it.week in 1..8)
+                require(!it.paused || it.finished == null) {
+                    "Une séance terminée ne peut pas être en pause"
+                }
                 require(
                     it.alternatives.isEmpty() ||
                         (it.program == Programs.CYCLE &&
@@ -292,6 +299,28 @@ class SportRepository(context: Context) {
 
     suspend fun save(t: Training) = db.sessions().put(SessionRecord(t.id, Codec.encode(t)))
 
+    suspend fun activate(target: Training) {
+        require(target.finished == null) { "Cette séance est déjà terminée" }
+        Codec.decode(Codec.encode(target))
+        db.withTransaction {
+            val data = db.sessions().read().map { Codec.decode(it.payload) }
+            require(
+                data.none {
+                    it.id != target.id &&
+                        it.finished == null &&
+                        it.program == target.program &&
+                        it.template == target.template
+                }
+            ) {
+                "Une séance de ce type attend déjà une reprise"
+            }
+            val next = data.firstOrNull { it.id == target.id } ?: target
+            require(next.finished == null)
+            data.filter { it.isActive && it.id != next.id }.forEach { save(it.copy(paused = true)) }
+            save(next.copy(paused = false))
+        }
+    }
+
     suspend fun erase() =
         db.withTransaction {
             db.sessions().clear()
@@ -308,14 +337,20 @@ class SportRepository(context: Context) {
     suspend fun restore(raw: String, exercises: Set<String>) {
         require(raw.length <= 5_000_000) { "Sauvegarde trop volumineuse" }
         val j = JSONObject(raw)
-        require(j.getInt("version") in 1..2) { "Version inconnue" }
+        require(j.getInt("version") in 1..3) { "Version inconnue" }
         val a = j.getJSONArray("sessions")
         require(a.length() <= 10000)
         val data = (0 until a.length()).map { Codec.decode(a.getJSONObject(it).toString()) }
+        require(data.map { it.id }.distinct().size == data.size && data.count { it.isActive } <= 1)
+        require(j.getInt("version") >= 3 || data.none { it.paused }) {
+            "Les séances en pause nécessitent une sauvegarde version 3"
+        }
         require(
-            data.map { it.id }.distinct().size == data.size &&
-                data.count { it.finished == null } <= 1
-        )
+            data.filter { it.finished == null }.map { it.program to it.template }.distinct().size ==
+                data.count { it.finished == null }
+        ) {
+            "Plusieurs séances non terminées du même type"
+        }
         require(data.all { t -> t.sets.all { it.exerciseId in exercises } }) { "Exercice inconnu" }
         val reviewArray = j.optJSONArray("reviews") ?: JSONArray()
         require(reviewArray.length() <= 10000)

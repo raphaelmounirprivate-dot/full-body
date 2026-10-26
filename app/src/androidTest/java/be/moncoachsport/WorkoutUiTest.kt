@@ -7,6 +7,81 @@ import org.junit.Rule
 import org.junit.Test
 
 class WorkoutUiTest {
+    private fun chooseSession(template: String) {
+        compose.onNodeWithContentDescription("Changer de séance").assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription("Choisir la séance $template").performClick()
+        compose.waitUntil(10000) {
+            val vm =
+                androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
+            vm.active?.template == template
+        }
+        compose.waitForIdle()
+    }
+
+    private fun hideKeyboard() {
+        compose.runOnUiThread {
+            compose.activity
+                .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
+            compose.activity.currentFocus?.clearFocus()
+        }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun switchingSessionsPreservesSetsDraftsAndStopsRest() {
+        compose.onNodeWithText("Commencer ma séance").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
+        }
+        val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
+        compose.onAllNodesWithText("kg total")[0].performTextReplacement("25")
+        hideKeyboard()
+        compose.onNodeWithText("Valider la série").performScrollTo().performClick()
+        compose.waitUntil(10000) { vm.active?.sets?.size == 1 }
+        compose.onAllNodesWithText("kg total")[0].performScrollTo().performTextReplacement("28")
+        hideKeyboard()
+        compose.waitUntil(10000) { vm.active?.drafts?.get("F1-1-kg") == "28" }
+        val original = vm.active!!
+        chooseSession("B")
+        org.junit.Assert.assertEquals(
+            original.copy(paused = true),
+            vm.sessions.value.first { it.id == original.id },
+        )
+        org.junit.Assert.assertEquals(0L to 0L, vm.timer.value)
+        org.junit.Assert.assertTrue(vm.completed.isEmpty())
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("Séance").performClick()
+        compose.onNodeWithText("Séance B").assertExists()
+        chooseSession("A")
+        org.junit.Assert.assertEquals(original, vm.active)
+        compose.onNodeWithText("Série 1 · enregistrée").assertExists()
+        compose.onAllNodesWithText("kg total")[0].assertTextContains("28")
+        org.junit.Assert.assertEquals(2, vm.sessions.value.size)
+        vm.saveDraft("F1-1-kg", "999", "a-stale-session")
+        vm.saveDraft("test-completion", "ok", original.id)
+        compose.waitUntil(10000) { vm.active?.drafts?.get("test-completion") == "ok" }
+        org.junit.Assert.assertEquals("28", vm.active!!.drafts["F1-1-kg"])
+    }
+
+    @Test
+    fun choosingBeforeStartingAndSharedExercisesKeepSeparateDrafts() {
+        compose.onNodeWithText("Séance").performClick()
+        chooseSession("C")
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
+        }
+        openExercise("Tirage vertical")
+        compose.onAllNodesWithText("kg total")[0].performTextReplacement("30")
+        hideKeyboard()
+        chooseSession("A")
+        openExercise("Tirage vertical")
+        compose.onAllNodesWithText("kg total")[0].assert(hasText("30", substring = true).not())
+        chooseSession("C")
+        openExercise("Tirage vertical")
+        compose.onAllNodesWithText("kg total")[0].assertTextContains("30")
+    }
+
     @Test
     fun correctedGuideShowsTheLegCurlCaption() {
         compose.onNodeWithText("Exercices").performClick()

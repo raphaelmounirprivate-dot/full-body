@@ -228,8 +228,13 @@ object Programs {
 
     fun extraAllowed(t: Training, slot: Int) = t.program == CYCLE && t.week >= 5 && slot in 0..2
 
-    fun next(program: String, sessions: List<Training>) =
-        Rules.next(sessions.count { it.program == program && it.finished != null })
+    fun next(program: String, sessions: List<Training>): String {
+        val last =
+            sessions
+                .filter { it.program == program && it.finished != null }
+                .maxByOrNull { it.finished!! }
+        return Rules.next(if (last == null) 0 else listOf("A", "B", "C").indexOf(last.template) + 1)
+    }
 
     fun canIncrease(
         t: Training,
@@ -248,6 +253,7 @@ object Programs {
                         it.program == t.program &&
                         it.sets.any { s -> s.exerciseId == p.id }
                 }
+                .sortedBy { it.finished }
                 .takeLast(2)
         if (prior.size < 2 || machine.isBlank() || setting.isBlank()) return false
         val current = exercise(p, t, exercises)

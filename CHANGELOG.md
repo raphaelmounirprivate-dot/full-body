@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 0.5.0 — 26 octobre 2026
+
+- Choix A/B/C accessible avec « Changer » en haut de la séance, ou « Choisir A, B ou C » avant de commencer.
+- Mise en pause et reprise sans terminer artificiellement une séance ni perdre ses séries ou brouillons. Une seule séance active ; changement enregistré dans une transaction Room.
+- Arrêt du repos au changement ; valeurs de saisie séparées entre séances, y compris pour un exercice commun.
+- Rotation et derniers passages fondés sur la date de fin réelle pour tenir compte des reprises.
+- Sauvegardes JSON et CSV au format 3 pour conserver les pauses. Import des anciens JSON 1/2 et CSV format 2 conservé ; Room reste en version 2.
+
 ## 0.4.0 — 26 octobre 2026
 
 - Nouvelle présentation de la séance : bandeau bleu nuit avec avancement réel, illustrations et exercices dépliables.

@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.4.0
+# Mon Coach Sport — Android 0.5.0
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -10,13 +10,13 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK 0.4.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.4.0). Il s’agit d’une version debug destinée aux essais locaux, pour Android 8.0 ou plus récent. Le dépôt et ses téléchargements sont privés.
+Pour tester l’application : [télécharger l’APK 0.5.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.5.0). Il s’agit d’une version debug destinée aux essais locaux, pour Android 8.0 ou plus récent. Le dépôt et ses téléchargements sont privés.
 
 | Accueil | Séance | Fiche d’exercice |
 | --- | --- | --- |
 | ![Accueil](docs/screenshots/accueil.png) | ![Séance](docs/screenshots/seance.png) | ![Fiche](docs/screenshots/fiche.png) |
 
-Voir aussi [l’aperçu compact de la séance](docs/screenshots/seance-apercu.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). Validation de cette version : [résultats 0.4.0](docs/validation-0.4.0.md).
+Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png), [l’aperçu compact de la séance](docs/screenshots/seance-apercu.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). Validation de cette version : [résultats 0.5.0](docs/validation-0.5.0.md).
 
 ## Développement
 
@@ -24,6 +24,7 @@ Le projet est développé par étapes, en conservant les séances existantes et 
 
 ## Fonctionnalités
 
+- Choix direct A/B/C : toucher « Changer » à côté du titre de séance, puis choisir le type souhaité. La séance quittée reste en pause ; revenir dessus reprend ses séries, sa semaine, ses réglages et ses saisies. Le repos en cours est arrêté. Sans séance en cours, « Choisir A, B ou C » permet de commencer librement. La rotation proposée suit la dernière séance réellement terminée.
 - Séance guidée avec avancement des séries, illustrations, exercices dépliables et une série proposée à la fois. Les séries enregistrées se résument sur une ligne et restent modifiables ; les brouillons sont conservés quand on replie un exercice.
 - Bouton « Voir la fiche » sur chaque exercice de la séance et du catalogue, y compris les options sautées : illustration agrandissable et consignes dans une fenêtre défilante. Fermer la fiche conserve les saisies.
 - Cycle de huit semaines : A/B/C, deux séries, plages de répétitions/repos propres à chaque séance, exercices facultatifs, repères cardio et RIR.
@@ -60,10 +61,10 @@ Room v2 ajoute les bilans par migration explicite 1→2 et préserve la table de
 
 Écritures asynchrones : les dernières frappes peuvent être perdues si l’arrêt intervient pendant une écriture. Le minuteur conserve son échéance ; Android peut retarder les notifications en veille. Alarme non exacte, non réinstallée après redémarrage complet du téléphone.
 
-- JSON v2 : séances, bilans, date de départ, programme et préférences d’interface. JSON v1 accepté. Autorisation de notification liée au téléphone.
-- CSV v0.2 : historique restaurable avec colonnes lisibles et état JSON conservant options/brouillons. Validation des guillemets, séparateurs, retours à la ligne, unités et cohérence. L’import conserve les bilans/préférences actuels.
+- JSON format 3 : séances actives et en pause, bilans, date de départ, programme et préférences d’interface. JSON formats 1 et 2 acceptés. Autorisation de notification liée au téléphone.
+- CSV format 3 : historique restaurable avec colonnes lisibles et état JSON conservant options, pauses et brouillons. Les anciens exports au format 2 (application v0.2 et suivantes) restent importables. Validation des guillemets, séparateurs, retours à la ligne, unités et cohérence. L’import conserve les bilans/préférences actuels.
 - Les CSV de consultation v0.1 et d’autres applications sont refusés car leur schéma diffère.
-- Confirmation et validation complète avant remplacement transactionnel dans Room. Une seule séance en cours par sauvegarde.
+- Confirmation et validation complète avant remplacement transactionnel dans Room. Une seule séance active ; au plus une séance non terminée par programme et type A/B/C. Les séances en pause ne sont pas comptées comme terminées. Les anciens APK ne peuvent pas restaurer les sauvegardes au format 3.
 
 ## Compiler et tester
 

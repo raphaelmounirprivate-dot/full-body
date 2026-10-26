@@ -114,7 +114,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     val active
-        get() = sessions.value.firstOrNull { it.finished == null }
+        get() = sessions.value.firstOrNull { it.isActive }
 
     val completed
         get() = sessions.value.filter { it.finished != null }
@@ -131,11 +131,27 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun start() = action {
+    fun start(requestedTemplate: String? = null) = action {
         if (!ready.value) return@action
+        require(requestedTemplate == null || requestedTemplate in listOf("A", "B", "C")) {
+            "Séance inconnue"
+        }
         val data = repository.sessions.first()
-        if (data.any { it.finished == null }) return@action
-        val selected = repository.program.first()
+        val current = data.firstOrNull { it.isActive }
+        if (requestedTemplate == null && current != null) return@action
+        val selected = current?.program ?: repository.program.first()
+        val template = requestedTemplate ?: Programs.next(selected, data)
+        if (current?.template == template) return@action
+        val pending =
+            data.firstOrNull {
+                it.program == selected && it.template == template && it.finished == null
+            }
+        if (pending != null) {
+            repository.setTimer(0, 0)
+            scheduler.update(0, false)
+            repository.activate(pending)
+            return@action
+        }
         val now = System.currentTimeMillis()
         var start = repository.cycleStart.first()
         if (selected == Programs.CYCLE && start == 0L) {
@@ -143,11 +159,10 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             repository.setCycleStart(now)
         }
         val week = if (selected == Programs.CYCLE) Rules.week(start, now) else 1
-        val template = Programs.next(selected, data)
         val prior =
-            data.lastOrNull {
-                it.program == selected && it.template == template && it.finished != null
-            }
+            data
+                .filter { it.program == selected && it.template == template && it.finished != null }
+                .maxByOrNull { it.finished!! }
         val alternatives =
             if (selected == Programs.CYCLE) prior?.alternatives.orEmpty() else emptyMap()
         val allowed =
@@ -156,7 +171,9 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             if (selected == Programs.CYCLE && week >= 7)
                 prior?.extraSets.orEmpty().intersect(allowed)
             else emptySet()
-        repository.save(
+        repository.setTimer(0, 0)
+        scheduler.update(0, false)
+        repository.activate(
             Training(
                 UUID.randomUUID().toString(),
                 template,
@@ -169,9 +186,10 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    fun log(set: LoggedSet) = action {
+    fun log(set: LoggedSet, sessionId: String? = null) = action {
         require(Rules.validate(set)) { "Vérifiez charge, répétitions et RIR (0–10)." }
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        if (sessionId != null && t.id != sessionId) return@action
         val p = Programs.plan(t, exercises).firstOrNull { it.id == set.exerciseId }
         require(
             p != null &&
@@ -198,7 +216,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun skip(id: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
         require(Programs.plan(t, exercises).any { it.id == id && it.optional })
         require(t.sets.none { it.exerciseId == id }) {
             "Cet exercice contient déjà des séries : elles sont conservées."
@@ -207,7 +225,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun extra(id: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
         val slot = Programs.plan(t, exercises).indexOfFirst { it.id == id }
         require(Programs.extraAllowed(t, slot))
         val removing = id in t.extraSets
@@ -219,7 +237,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun chooseVariant(slot: String, replacement: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
         require(t.program == Programs.CYCLE)
         require(Programs.cycle.getValue(t.template).any { it.id == slot }) { "Mouvement inconnu" }
         require(
@@ -244,9 +262,10 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    fun saveDraft(key: String, value: String) = action {
+    fun saveDraft(key: String, value: String, sessionId: String? = null) = action {
         require(value.length <= 10000) { "Texte trop long" }
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        if (sessionId != null && t.id != sessionId) return@action
         repository.save(t.copy(drafts = t.drafts + (key to value)))
     }
 
@@ -257,8 +276,10 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         discomfort: String,
         machine: String,
         intensity: String,
+        sessionId: String? = null,
     ) = action {
-        val t = repository.sessions.first().firstOrNull { it.finished == null } ?: return@action
+        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        if (sessionId != null && t.id != sessionId) return@action
         require(t.sets.any { it.done }) { "Validez au moins une série avant de terminer." }
         val minutes = cardio.toIntOrNull()
         val e = energy.toIntOrNull()
@@ -305,7 +326,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun exportJson() =
         JSONObject()
-            .put("version", 2)
+            .put("version", 3)
             .put(
                 "sessions",
                 JSONArray().apply { sessions.value.forEach { put(JSONObject(Codec.encode(it))) } },

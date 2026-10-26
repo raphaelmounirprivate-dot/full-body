@@ -43,7 +43,7 @@ object HistoryCsv {
                 val metadata = Codec.encode(t.copy(sets = emptyList()))
                 (t.sets.map { it as LoggedSet? }.ifEmpty { listOf(null) }).map { s ->
                     listOf(
-                        "2",
+                        "3",
                         t.id,
                         t.program,
                         t.started.toString(),
@@ -71,13 +71,16 @@ object HistoryCsv {
         require(raw.length <= 5_000_000) { "Fichier trop volumineux" }
         val rows = parse(raw.removePrefix("\uFEFF"))
         require(rows.isNotEmpty() && rows.first() == header) {
-            "CSV non reconnu : utilisez un export de Mon Coach Sport v0.2."
+            "CSV non reconnu : utilisez un export de Mon Coach Sport v0.2 ou ultérieure."
         }
         val data =
             rows.drop(1).map { row ->
-                require(row.size == header.size && row[0] == "2") { "Ligne CSV invalide" }
+                require(row.size == header.size && row[0] in listOf("2", "3")) {
+                    "Ligne CSV invalide"
+                }
                 val r = row.map(::original)
                 val t = Codec.decode(r[15])
+                require(row[0] == "3" || !t.paused)
                 require(t.sets.isEmpty())
                 require(
                     r[1] == t.id &&
@@ -123,7 +126,7 @@ object HistoryCsv {
 
     fun asBackup(sessions: List<Training>) =
         JSONObject()
-            .put("version", 2)
+            .put("version", 3)
             .put(
                 "sessions",
                 JSONArray().apply { sessions.forEach { put(JSONObject(Codec.encode(it))) } },

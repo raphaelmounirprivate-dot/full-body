@@ -7,6 +7,44 @@ import org.junit.Test
 
 class ProgramsTest {
     @Test
+    fun manualChoiceContinuesAfterTheLastFinishedTemplate() {
+        val b = training("B").copy(finished = 2000)
+        assertEquals("C", Programs.next(Programs.CYCLE, listOf(b)))
+        assertEquals("A", Programs.next(Programs.CYCLE, listOf(b.copy(template = "C"))))
+        assertEquals(
+            "A",
+            Programs.next(Programs.CYCLE, listOf(b.copy(finished = null, paused = true))),
+        )
+    }
+
+    @Test
+    fun resumedSessionsUseCompletionOrderForRotationAndProgression() {
+        val resumed = passage("resumed").copy(started = 1, finished = 5000, sets = emptyList())
+        val b = training("B").copy(id = "b", started = 2000, finished = 3000)
+        assertEquals("B", Programs.next(Programs.CYCLE, listOf(resumed, b)))
+        val failed =
+            passage("late-failure")
+                .copy(
+                    started = 1,
+                    finished = 5000,
+                    sets = List(2) { LoggedSet("F1", it, 40.0, 10, 3, "Presse 1", "Siège 3") },
+                )
+        val first = passage("first").copy(started = 2000, finished = 3000)
+        val second = passage("second").copy(started = 3000, finished = 4000)
+        assertFalse(
+            Programs.canIncrease(
+                training(),
+                Programs.cycle.getValue("A").first(),
+                listOf(failed, first, second),
+                exercises,
+                "Presse 1",
+                "Siège 3",
+                "total",
+            )
+        )
+    }
+
+    @Test
     fun guideVariantsUseTheirOwnPrescriptions() {
         val fly =
             Programs.plan(training("C").copy(alternatives = mapOf("F2" to "F16")), exercises)

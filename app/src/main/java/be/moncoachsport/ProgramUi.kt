@@ -29,7 +29,7 @@ fun CoachHome(
 ) {
     val program by vm.program.collectAsStateWithLifecycle()
     val cycleStart by vm.cycleStart.collectAsStateWithLifecycle()
-    val active = sessions.firstOrNull { it.finished == null }
+    val active = sessions.firstOrNull { it.isActive }
     val completed = sessions.filter { it.finished != null }
     val currentWeek =
         if (cycleStart == 0L) 1 else Rules.week(cycleStart, System.currentTimeMillis())
@@ -136,9 +136,11 @@ fun CoachHome(
         item {
             Panel("Dernier entraînement") {
                 Text(
-                    completed.lastOrNull()?.let {
-                        "Séance ${it.template} · ${date(it.started)}\n${Programs.title(it.program)} · ${it.sets.size} séries"
-                    } ?: "Votre historique commencera après votre première séance."
+                    completed
+                        .maxByOrNull { it.finished!! }
+                        ?.let {
+                            "Séance ${it.template} · ${date(it.started)}\n${Programs.title(it.program)} · ${it.sets.size} séries"
+                        } ?: "Votre historique commencera après votre première séance."
                 )
             }
         }

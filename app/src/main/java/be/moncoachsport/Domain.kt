@@ -51,7 +51,11 @@ data class Training(
     val skipped: Set<String> = emptySet(),
     val extraSets: Set<String> = emptySet(),
     val alternatives: Map<String, String> = emptyMap(),
-)
+    val paused: Boolean = false,
+) {
+    val isActive: Boolean
+        get() = finished == null && !paused
+}
 
 object Rules {
     fun next(completed: Int) = listOf("A", "B", "C")[completed % 3]
