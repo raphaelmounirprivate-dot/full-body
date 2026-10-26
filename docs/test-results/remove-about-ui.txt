@@ -1,0 +1,6 @@
+
+be.moncoachsport.WorkoutUiTest:........
+
+Time: 16.415
+
+OK (8 tests)

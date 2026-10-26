@@ -1,0 +1,7 @@
+
+be.moncoachsport.StorageTest:...........
+be.moncoachsport.WorkoutUiTest:........
+
+Time: 17.402
+
+OK (19 tests)

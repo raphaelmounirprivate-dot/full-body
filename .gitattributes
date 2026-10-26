@@ -1,0 +1,9 @@
+* text=auto
+*.pdf binary
+*.png binary
+*.webp binary
+*.jar binary
+*.jpg binary
+*.jpeg binary
+gradlew text eol=lf
+*.bat text eol=crlf

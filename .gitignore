@@ -1,0 +1,16 @@
+.tools/
+.gradle/
+.kotlin/
+**/build/
+output/
+local.properties
+.idea/
+*.jks
+*.keystore
+.env
+.env.*
+!.env.example
+*.p12
+*.pem
+__pycache__/
+*.pyc
