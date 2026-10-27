@@ -6,6 +6,10 @@ Construire une application Android personnelle en français pour suivre un progr
 
 ## Architecture
 
+Version 0.8 : `RestRules.kt` ajuste les durées sans réactiver un repos expiré ; DataStore applique les ajustements et fermetures conditionnelles de façon atomique. `RestScheduler.kt` publie un chronomètre Android natif sur un canal silencieux distinct et partage le marqueur de fin entre réception système et échéance du ViewModel. `AppForeground.kt` limite la vibration explicite à une application visible et interactive, lorsque les rappels sont activés. Les tics d’interface restent isolés dans `RestTimerCard.kt`.
+
+`PersonalRecords.kt` calcule les records comparables sans modifier les séances ni créer une seconde règle de progression. Le signal de six secondes apparaît après l’écriture ; les badges persistants d’affichage sont dérivés des séries validées et de l’historique terminé. `WorkoutWidget.kt` utilise RemoteViews et AppWidgetProvider, sans nouvelle bibliothèque : observation de la table des séances sans les brouillons, puis dédoublonnage du modèle affiché. Un changement utile demande un rafraîchissement qui relit les données validées, après les transactions. Les mises à jour Android et le bouton Actualiser couvrent l’usage sans application ouverte.
+
 Version 0.7 : `FeatureRules.kt` porte le choix de la prochaine série, les validations des mesures/liens/options et le comptage hebdomadaire. `PersonalData.kt` porte la table Room des mesures et le codec des préférences complémentaires. `PersonalPanels.kt` et `ExerciseVideo.kt` présentent ces fonctions. Aucune nouvelle dépendance ni permission Internet.
 
 Room v4 ajoute uniquement la table des mesures via 3→4. Le JSON normal passe en version 5 pour éviter qu’un ancien APK ignore ces données lors d’une restauration. Les anciens JSON 1/2/3 et CSV 2/3 restent importables ; l’absence des nouveaux champs dans une ancienne sauvegarde conserve les données personnelles existantes. Le CSV conserve sa portée historique des séances. Voir [la feuille de route](ROADMAP.md) et [la validation 0.7](validation-0.7.0.md).

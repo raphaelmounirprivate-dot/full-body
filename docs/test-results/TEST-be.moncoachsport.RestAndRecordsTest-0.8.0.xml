@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="be.moncoachsport.RestAndRecordsTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-27T17:31:45.775Z" hostname="DESKTOP-N5ECKPI" time="0.008">
+  <properties/>
+  <testcase name="widgetStartsAtAAndFlagsUnreadableHistory" classname="be.moncoachsport.RestAndRecordsTest" time="0.004"/>
+  <testcase name="loadRecordAndRepetitionRecordUseDifferentBenchmarks" classname="be.moncoachsport.RestAndRecordsTest" time="0.001"/>
+  <testcase name="firstMeasurementAndTiesAreNotRecords" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <testcase name="pausedAndExpiredRestNeverRestartByAdjustment" classname="be.moncoachsport.RestAndRecordsTest" time="0.001"/>
+  <testcase name="plankCanEarnADurationRecordButNeverAWeightRecord" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <testcase name="widgetResumesActiveOrPausedWorkoutWithoutFinishingIt" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <testcase name="differentProtocolsAndIncompleteHistoryDoNotEarnRecords" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <testcase name="laterTiedSeriesDoesNotEraseAnEarlierRecordAndCorrectionIsComparedProperly" classname="be.moncoachsport.RestAndRecordsTest" time="0.001"/>
+  <testcase name="widgetSuggestsNextFinishedRotationAndUsesCompletionDate" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <testcase name="adjustsRunningRestAndFinishesAtZeroWithoutNegativeTime" classname="be.moncoachsport.RestAndRecordsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

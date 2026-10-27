@@ -1,8 +1,19 @@
 # Suivi des fonctionnalités
 
-État du développement 0.7.0, vérifié le 27 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
+État du développement 0.8.0, vérifié le 27 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
 
 ## Priorité séance
+
+### Ajouts 0.8.0
+
+- [x] Notification silencieuse de repos en cours avec chronomètre Android natif en décompte ; contenu générique visible sur l’écran verrouillé selon les réglages du téléphone.
+- [x] Fin du repos : « Repos terminé ✓ », plus de bouton Pause à zéro, fermeture automatique après trois secondes visibles.
+- [x] Retour vibratoire à la fin si les rappels sont activés, l’application visible et le téléphone interactif ; dédoublonnage partagé avec la notification système.
+- [x] Ajustements +30 s / −15 s, en cours ou en pause, persistés et répercutés sur l’alarme et la notification ; aucun redémarrage d’un repos expiré.
+- [x] Records personnels de charge, répétitions à charge identique, ou durée pour les exercices chronométrés. Machine, réglages, programme et unité identiques ; premier passage sans badge, historique incomplet sans suggestion.
+- [x] Widget natif sur l’accueil Android : prochaine séance ou reprise, objectif hebdomadaire, actualisation et ouverture de la séance. Distinct des cartes organisables dans l’application.
+- [x] Actualisation du widget après les changements pertinents, au changement de date et périodiquement selon Android ; pas à chaque frappe de brouillon.
+- [ ] Vérifier le rendu de la notification verrouillée et du widget sur le téléphone physique et son lanceur.
 
 - [x] Repos manuel et automatique, pause/reprise.
 - [x] Notification locale avec alarme exacte si autorisée ; repli non exact explicite.

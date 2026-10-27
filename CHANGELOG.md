@@ -1,5 +1,14 @@
 # Historique des versions
 
+## 0.8.0 — 27 octobre 2026
+
+- Notification silencieuse avec chronomètre natif en décompte pendant le repos ; annulation à la pause et à la fin.
+- Carte « Repos terminé ✓ », vibration de fin selon les réglages, suppression du bouton Pause à zéro et fermeture après trois secondes visibles.
+- +30 s / −15 s sur le minuteur actif ou en pause, avec stockage atomique de l’ajustement et protection contre la fermeture d’un nouveau repos par une ancienne échéance.
+- Records personnels comparables, signalés après enregistrement et visibles sur les séries ; durée séparée de la charge pour la planche.
+- Widget Android natif, redimensionnable, avec séance, objectif hebdomadaire, actualisation et retour à la séance existante.
+- Room v4 et formats JSON 5 / CSV 3 conservés : les records et le widget sont dérivés des données existantes.
+
 ## 0.7.0 — 27 octobre 2026
 
 - Alarmes de repos exactes si autorisées, repli explicite, vérification de l’échéance persistée, annulation des événements obsolètes et réarmement.

@@ -343,6 +343,8 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
         decoder.readAll(rows.map { it.session }, rows.flatMap { it.drafts })
     }.flowOn(Dispatchers.Default)
     val sessions = snapshots.map { it.sessions }.distinctUntilChanged()
+    // Only session-table changes: draft keystrokes never refresh a launcher widget.
+    val widgetSnapshots = db.sessions().observe().map { decoder.readAll(it) }.flowOn(Dispatchers.Default)
 
     suspend fun snapshotNow(): SessionReadModel =
         db.withTransaction { decoder.readAll(db.sessions().read(), db.drafts().read()) }
@@ -398,6 +400,30 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
             it[longPreferencesKey("restEnd")] = end
             it[longPreferencesKey("restPaused")] = paused
         }
+    }
+
+    suspend fun adjustTimer(seconds: Int): Pair<Long, Long> {
+        var updated = 0L to 0L
+        prefs.edit {
+            updated = RestRules.adjust(it[longPreferencesKey("restEnd")] ?: 0L,
+                it[longPreferencesKey("restPaused")] ?: 0L, seconds, System.currentTimeMillis())
+            it[longPreferencesKey("restEnd")] = updated.first
+            it[longPreferencesKey("restPaused")] = updated.second
+        }
+        return updated
+    }
+
+    suspend fun dismissExpiredTimer(expectedEnd: Long): Boolean {
+        var dismissed = false
+        prefs.edit {
+            if (expectedEnd > 0 && it[longPreferencesKey("restEnd")] == expectedEnd &&
+                System.currentTimeMillis() >= expectedEnd) {
+                it[longPreferencesKey("restEnd")] = 0L
+                it[longPreferencesKey("restPaused")] = 0L
+                dismissed = true
+            }
+        }
+        return dismissed
     }
 
     suspend fun setDark(value: Boolean) {

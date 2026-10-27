@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="16dp" android:background="@drawable/widget_background">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/widget_brand" android:textSize="12sp" android:textColor="#A9CEFF"/>
+    <TextView android:id="@+id/widget_workout" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/widget_open" android:textSize="20sp"
+        android:textStyle="bold" android:textColor="#FFFFFF" android:maxLines="2"/>
+    <TextView android:id="@+id/widget_program" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#D7E7FF" android:textSize="13sp"/>
+    <TextView android:id="@+id/widget_goal" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="@string/widget_loading" android:textColor="#FFFFFF"
+        android:textSize="14sp" android:maxLines="3"/>
+    <ProgressBar android:id="@+id/widget_progress" style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="8dp"
+        android:progressTint="#80B6FF" android:progressBackgroundTint="#38516F" android:indeterminate="false"/>
+    <Button android:id="@+id/widget_refresh" android:layout_width="wrap_content" android:layout_height="48dp"
+        android:layout_gravity="end" android:text="@string/widget_refresh" android:textAllCaps="false"
+        android:textColor="#A9CEFF" style="?android:attr/borderlessButtonStyle"/>
+</LinearLayout>

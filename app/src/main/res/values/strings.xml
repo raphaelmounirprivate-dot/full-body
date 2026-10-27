@@ -1,0 +1,7 @@
+<resources>
+    <string name="widget_brand">MON COACH SPORT</string>
+    <string name="widget_name">Séance et objectif</string>
+    <string name="widget_open">Ouvrir mes séances</string>
+    <string name="widget_loading">Actualisation…</string>
+    <string name="widget_refresh">Actualiser</string>
+</resources>

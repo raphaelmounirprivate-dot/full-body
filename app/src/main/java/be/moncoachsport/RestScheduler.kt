@@ -5,6 +5,9 @@ import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.*
@@ -21,7 +24,62 @@ class RestScheduler(private val context: Context) {
     )
     fun update(end: Long, enabled: Boolean) = synchronized(lock) {
         context.getSystemService(NotificationManager::class.java).cancel(42)
+        clearCountdown()
         schedule(42, if (enabled) end else 0, true)
+        if (enabled && end > System.currentTimeMillis() && state.getLong("delivered42",0) != end)
+            showCountdown(end)
+    }
+    fun clearCountdown() { context.getSystemService(NotificationManager::class.java).cancel(44) }
+    private fun notificationsAllowed() = (Build.VERSION.SDK_INT < 33 ||
+        context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
+        context.getSystemService(NotificationManager::class.java).areNotificationsEnabled()
+    private fun openWorkout() = PendingIntent.getActivity(context,42,
+        Intent(context,MainActivity::class.java).putExtra("openWorkout",true)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    private fun showCountdown(end: Long) {
+        if (!notificationsAllowed()) return
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(NotificationChannel("rest_countdown", "Repos en cours", NotificationManager.IMPORTANCE_LOW)
+            .apply { enableVibration(false); setSound(null,null) })
+        manager.notify(44, Notification.Builder(context,"rest_countdown")
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle("Repos en cours")
+            .setContentText("Temps restant · touchez pour reprendre la séance")
+            .setWhen(end).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
+            .setOngoing(true).setOnlyAlertOnce(true).setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setCategory(Notification.CATEGORY_STATUS).setContentIntent(openWorkout())
+            .setTimeoutAfter((end-System.currentTimeMillis()).coerceAtLeast(1)).build())
+    }
+    /** The VM calls this at the deadline, even when system notifications are disabled. */
+    fun finishInApp(end: Long, notify: Boolean) = synchronized(lock) {
+        if (end <= 0 || System.currentTimeMillis() < end || state.getLong("delivered42",0) == end) return@synchronized
+        val scheduled = state.getLong("end42",0)
+        if (scheduled != 0L && scheduled != end) return@synchronized
+        state.edit().putLong("end42",end).commit()
+        completeRest(end, notify)
+    }
+    private fun completeRest(end: Long, notify: Boolean) {
+        alarms.cancel(pending(42,end))
+        clearCountdown()
+        state.edit().putLong("end42",0).putLong("delivered42",end).commit()
+        if (System.currentTimeMillis() - end > 10 * 60_000) return
+        val foreground = AppForeground.visible && context.getSystemService(PowerManager::class.java).isInteractive
+        if (foreground && notify) {
+            val vibrator = context.getSystemService(Vibrator::class.java)
+            if (vibrator.hasVibrator()) vibrator.vibrate(VibrationEffect.createOneShot(150,VibrationEffect.DEFAULT_AMPLITUDE),
+                android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).build())
+        }
+        if (!notify || !notificationsAllowed()) return
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val channel = if (foreground) "rest_done_visible" else "rest"
+        manager.createNotificationChannel(NotificationChannel(channel,
+            if (foreground) "Repos terminé dans l’application" else "Fin du repos",
+            if (foreground) NotificationManager.IMPORTANCE_LOW else NotificationManager.IMPORTANCE_DEFAULT)
+            .apply { enableVibration(!foreground) })
+        manager.notify(42,Notification.Builder(context,channel)
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle("Ta pause est finie")
+            .setContentText("Commence ta prochaine série quand tu te sens prêt.")
+            .setContentIntent(openWorkout()).setAutoCancel(true).build())
     }
     fun cycle(start: Long, enabled: Boolean) = synchronized(lock) {
         val end = if (start > 0 && enabled)
@@ -65,6 +123,10 @@ class RestScheduler(private val context: Context) {
         if (id !in listOf(42, 43) || end <= 0 || state.getLong("end$id", 0) != end) return@synchronized
         val now = System.currentTimeMillis()
         if (now < end) return@synchronized
+        if (id == 42) {
+            completeRest(end, true)
+            return@synchronized
+        }
         state.edit().putLong("end$id", 0).putLong("delivered$id",end).commit()
         if (id == 42 && now - end > 10 * 60_000) return@synchronized
         if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)

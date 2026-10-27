@@ -8,6 +8,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.*
@@ -134,10 +135,21 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setTimer(end: Long, paused: Long = 0L) = action {
         repository.setTimer(end, paused)
-        scheduler.update(end, alerts.value)
+        scheduler.update(end, repository.alerts.first())
+    }
+    fun adjustRest(seconds: Int) = action {
+        val updated = repository.adjustTimer(seconds)
+        scheduler.update(updated.first, repository.alerts.first())
+    }
+    fun dismissRest(expectedEnd: Long) = action {
+        if (repository.dismissExpiredTimer(expectedEnd)) scheduler.clearCountdown()
     }
 
     val message = MutableStateFlow("")
+    val personalRecord = MutableStateFlow<RecordNotice?>(null)
+    fun dismissRecord(token: Long) {
+        if (personalRecord.value?.token == token) personalRecord.value = null
+    }
     private val ready = MutableStateFlow(false)
 
     init {
@@ -153,6 +165,24 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             }.collect { (start, enabled, alerts) -> scheduler.cycle(start, enabled && alerts) }
         }
         scheduler.reconcile()
+        viewModelScope.launch {
+            combine(repository.widgetSnapshots,repository.program,
+                repository.personal.map { it.weeklyGoal }.distinctUntilChanged()) { snapshot, program, goal ->
+                WorkoutWidgetModel.from(snapshot.sessions,program,goal,snapshot.unreadable.isNotEmpty())
+            }.distinctUntilChanged().catch {
+                WorkoutWidget.publish(getApplication(),WorkoutWidgetModel.unavailable)
+            }.collect { WorkoutWidget.requestUpdate(getApplication()) }
+        }
+        viewModelScope.launch {
+            repository.timer.collectLatest { (end, _) ->
+                if (end <= 0) return@collectLatest
+                delay((end-System.currentTimeMillis()).coerceAtLeast(0))
+                mutex.withLock {
+                    if (repository.timer.first().first == end)
+                        scheduler.finishInApp(end,repository.alerts.first())
+                }
+            }
+        }
     }
 
     val active
@@ -232,7 +262,8 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun log(set: LoggedSet, sessionId: String? = null) = action {
         require(Rules.validate(set)) { "Vérifiez charge, répétitions et RIR (0–10)." }
-        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
+        val snapshot = repository.snapshotNow()
+        val t = snapshot.sessions.firstOrNull { it.isActive } ?: return@action
         if (sessionId != null && t.id != sessionId) return@action
         val catalogue = exercisesFor(t.program)
         val p = Programs.plan(t, catalogue).firstOrNull { it.id == set.exerciseId }
@@ -243,6 +274,8 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         ) {
             "Série hors du programme de cette séance"
         }
+        val record = PersonalRecords.evaluate(t,set,snapshot.sessions,Programs.exercise(p,t,catalogue),
+            historyComplete=snapshot.unreadable.isEmpty())
         repository.save(
             t.copy(
                 sets =
@@ -250,6 +283,11 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                         set
             )
         )
+        if (record.achieved) {
+            val notice = RecordNotice(t.id,Programs.exercise(p,t,catalogue).name,record,System.nanoTime())
+            personalRecord.value = notice
+            viewModelScope.launch { delay(6000); dismissRecord(notice.token) }
+        }
         if (repository.autoRest.first() && p.restMax > 0) {
             val seconds =
                 t.drafts["${p.id}-rest"]?.toIntOrNull()?.takeIf { it in p.restMin..p.restMax }

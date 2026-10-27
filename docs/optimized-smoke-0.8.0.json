@@ -1,0 +1,20 @@
+{
+  "version": "0.8.0",
+  "versionCode": 10,
+  "optimizedApkSha256": "4cdee765fd09b3868145be3ca85b0bc159a2f4816b64ed83f3a9aaf23a9862a9",
+  "bytes": 6774448,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedOverExistingApp": true,
+  "installedApkHashMatchesArtifact": true,
+  "keyguardShowingWhileCaptured": true,
+  "widgetOnLauncherAndRefreshWithoutOpeningApp": true,
+  "widgetTapResumesWorkout": true,
+  "widgetOffered4x2AndResizeVerified": true,
+  "widget130PercentVisuallyVerified": true,
+  "smokePassed": true,
+  "lockedCountdownVisuallyVerified": [
+    "01:55",
+    "01:51"
+  ],
+  "noFatalExceptionInProcessLog": true
+}

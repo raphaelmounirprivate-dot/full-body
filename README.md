@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.7.0
+# Mon Coach Sport — Android 0.8.0
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -10,19 +10,24 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK optimisé 0.7.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.7.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
+Pour tester l’application : [télécharger l’APK optimisé 0.8.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
 
 | Accueil | Séance | Fiche d’exercice |
 | --- | --- | --- |
 | ![Accueil](docs/screenshots/accueil.png) | ![Séance](docs/screenshots/seance.png) | ![Fiche](docs/screenshots/fiche.png) |
 
-Les captures ci-dessus illustrent les versions précédentes. Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation : [résultats 0.7.0](docs/validation-0.7.0.md).
+Les captures ci-dessus illustrent les versions précédentes. Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation : [résultats 0.8.0](docs/validation-0.8.0.md).
 
 ## Développement
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
 
 ## Fonctionnalités
+
+- Pendant le repos, notification silencieuse avec décompte natif Android, visible sur l’écran verrouillé selon les réglages système. Activer « Notification et vibration » dans l’accueil ; le compteur ne dépend pas d’une boucle qui réveille l’application chaque seconde.
+- Minuteur : +30 s / −15 s, aussi en pause. À zéro : « Repos terminé ✓ », puis fermeture après trois secondes visibles ; vibration si les rappels sont activés et l’application visible, sans double signal.
+- Records personnels : badge de charge, de répétitions à charge identique ou de durée. Renseigner « Machine et réglages » : les comparaisons restent séparées par programme, exercice, machine, réglages et unité. Premier passage sans badge ; aucun record annoncé avec un historique illisible. Aucun changement de charge automatique.
+- Vrai widget sur l’accueil Android : séance à reprendre ou prochaine séance A/B/C, objectif hebdomadaire et bouton Actualiser. Depuis l’accueil de l’application, « Ajouter le widget Android », ou appui long sur l’accueil du téléphone → Widgets → Mon Coach Sport. Il s’agit d’un widget distinct des cartes internes réorganisables.
 
 - Rappel de repos précis si autorisé dans Android, repli non exact sinon ; événements annulés ou périmés ignorés, réarmement des échéances futures après redémarrage et mise à jour. Activer « Notification et vibration », puis « Autoriser les rappels précis » si proposé.
 - Écran maintenu allumé pendant une séance active, réglable depuis « Confort pendant la séance ». Le verrouillage manuel reste possible.
@@ -99,7 +104,7 @@ Installer l’APK par-dessus la précédente avec `adb install -r` pour conserve
 
 Livrables : `output/`, avec empreintes SHA-256. L’archive source inclut code, tests, documents et captures, sans outils/caches. Livrables précédents dans `output/v0.1.0/`.
 
-Preuves : `docs/validation-0.7.0.md` et `docs/test-results/`. La [CI Android](https://github.com/raphaelmounirprivate-dot/full-body/actions/workflows/android.yml) lance les tests JVM et lint à chaque push et pull request ; les tests sur émulateur restent exécutés localement. Tests de contenu : `python scripts/verify_content.py` et `python scripts/verify_guide.py`. Réimport du guide : `python scripts/import_guide.py`, puis `python scripts/optimize_assets.py` pour préparer les copies mobiles. `python scripts/verify_rendered_assets.py` compare le rendu des 39 pages. L’importateur `scripts/import_programme.py` est réservé à l’archive historique de 8 pages. Dépendances : pypdf, pypdfium2 et Pillow. Aucun remplacement de source nécessaire pour compiler.
+Preuves : `docs/validation-0.8.0.md` et `docs/test-results/`. La [CI Android](https://github.com/raphaelmounirprivate-dot/full-body/actions/workflows/android.yml) lance les tests JVM et lint à chaque push et pull request ; les tests sur émulateur restent exécutés localement. Tests de contenu : `python scripts/verify_content.py` et `python scripts/verify_guide.py`. Réimport du guide : `python scripts/import_guide.py`, puis `python scripts/optimize_assets.py` pour préparer les copies mobiles. `python scripts/verify_rendered_assets.py` compare le rendu des 39 pages. L’importateur `scripts/import_programme.py` est réservé à l’archive historique de 8 pages. Dépendances : pypdf, pypdfium2 et Pillow. Aucun remplacement de source nécessaire pour compiler.
 
 Nettoyage : `python scripts/cleanup_artifacts.py` propose une simulation ; ajouter `--apply` pour retirer uniquement les archives d’outils déjà extraits et les anciens APK/AAB listés. Les sources des versions anciennes et les livrables 0.5.0 de retour arrière sont conservés. Rapport : `docs/local-cleanup.json`.
 

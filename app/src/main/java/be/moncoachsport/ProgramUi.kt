@@ -133,6 +133,7 @@ fun CoachHome(
             }
         }
         item { HomeCardSettings(vm) }
+        item { WidgetCard() }
         item { ProgramSelector(vm, program, cycleStart) }
         item { GuideSafety(vm.guideSections) }
         if (program == Programs.CYCLE) item { PhaseCard(currentWeek) }

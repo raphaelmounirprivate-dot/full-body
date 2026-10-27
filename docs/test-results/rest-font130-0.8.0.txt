@@ -1,0 +1,6 @@
+be.moncoachsport.RestUiTest:...
+be.moncoachsport.GuidedUiTest:...
+
+Time: 17.489
+
+OK (6 tests)

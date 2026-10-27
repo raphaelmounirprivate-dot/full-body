@@ -1,0 +1,11 @@
+python.exe : ....
+Au caractère Ligne:2 : 32
++ ... NG='utf-8'; & C:/Users/Darkmoon/.cache/codex-runtimes/codex-primary-r ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (....:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.004s
+
+OK

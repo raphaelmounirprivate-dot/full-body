@@ -15,6 +15,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() { super.onStart(); AppForeground.started() }
+    override fun onStop() { AppForeground.stopped(); super.onStop() }
     private var workoutRequest by mutableIntStateOf(0)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +35,7 @@ fun CoachApp(vm: CoachViewModel = viewModel(), workoutRequest: Int = 0) {
     val dark by vm.dark.collectAsStateWithLifecycle()
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
+    val record by vm.personalRecord.collectAsStateWithLifecycle()
     val nav = rememberNavController()
     LaunchedEffect(workoutRequest) { if (workoutRequest > 0) nav.navigate("Séance") { launchSingleTop = true } }
     val back by nav.currentBackStackEntryAsState()
@@ -46,6 +49,10 @@ fun CoachApp(vm: CoachViewModel = viewModel(), workoutRequest: Int = 0) {
         )
     MaterialTheme(colorScheme = coachColors(dark)) {
         Scaffold(
+            snackbarHost = {
+                record?.takeIf { it.sessionId == sessions.firstOrNull { t -> t.isActive }?.id &&
+                    back?.destination?.route == "Séance" }?.let { RecordBanner(vm,it) }
+            },
             topBar = { RecoveryBanner(vm) },
             bottomBar = {
                 NavigationBar {

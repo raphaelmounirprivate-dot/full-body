@@ -1,0 +1,23 @@
+be.moncoachsport.WorkoutUiTest:..
+
+Time: 9.127
+
+OK (2 tests)
+
+
+
+
+be.moncoachsport.WorkoutUiTest:..
+
+Time: 8.719
+
+OK (2 tests)
+
+
+
+
+be.moncoachsport.WorkoutUiTest:..
+
+Time: 8.946
+
+OK (2 tests)

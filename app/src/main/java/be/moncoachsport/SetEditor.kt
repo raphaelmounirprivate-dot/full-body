@@ -13,6 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 @Composable
 internal fun SetEditor(
@@ -29,6 +31,7 @@ internal fun SetEditor(
 ) {
     val key = "${e.id}-$index"
     val stateKey = "${active.id}-$key"
+    val history = remember(sessions) { sessions.filter { it.finished != null } }
     var kg by
         rememberSaveable(stateKey, stored) {
             mutableStateOf(
@@ -112,6 +115,12 @@ internal fun SetEditor(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                val unreadable by vm.unreadable.collectAsStateWithLifecycle()
+                val record = remember(active.sets, history, unreadable.isEmpty()) {
+                    PersonalRecords.forStored(active,stored,history,e,unreadable.isEmpty())
+                }
+                if (record.achieved) Text("Record personnel · ${record.label()}",
+                    color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
             }
             Icon(
                 Icons.Outlined.Edit,
@@ -139,7 +148,7 @@ internal fun SetEditor(
                 vm.saveDraft("$key-kg", it, active.id)
             },
             "kg $unit",
-            Modifier.weight(1f),
+            Modifier.weight(1f).semantics { contentDescription = "Charge de ${e.name}, série ${index+1}" },
         )
         NumberField(
             reps,
@@ -192,7 +201,6 @@ internal fun SetEditor(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-    val history = remember(sessions) { sessions.filter { it.finished != null } }
     val unreadable by vm.unreadable.collectAsStateWithLifecycle()
     val policy = active.copy(drafts = emptyMap())
     val canIncrease =
