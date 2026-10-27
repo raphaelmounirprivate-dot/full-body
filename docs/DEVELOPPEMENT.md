@@ -50,7 +50,7 @@ python scripts/verify_guide.py
 
 Les tests Android doivent utiliser un émulateur dédié : certains effacent les données de l’application. Ne pas les lancer sur le téléphone ou l’émulateur contenant les séances personnelles.
 
-La validation de la version 0.5.0 rapporte une compilation APK/AAB réussie, 24 tests JVM, 26 tests Android et 11 contrôles Python réussis, ainsi qu’un lint sans erreur bloquante. Voir `validation-0.5.0.md`. Les contrôles des versions précédentes sont conservés dans `validation-0.4.0.md`, `validation-0.3.1.md` et `validation.md` : ces résultats décrivent les exécutions locales documentées, pas une intégration continue GitHub.
+La validation de la version 0.6.0 rapporte une compilation APK/AAB réussie, 23 tests JVM, 33 tests Android et 12 contrôles Python réussis, ainsi qu’un lint sans erreur bloquante. Voir `validation-0.6.0.md`. La CI exécute séparément les tests JVM et lint ; les essais Android, le contrôle du paquet optimisé et les comparaisons PDF sont locaux. Les validations antérieures restent conservées dans les rapports de versions.
 
 ## Suite du développement
 

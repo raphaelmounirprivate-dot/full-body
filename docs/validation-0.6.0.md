@@ -42,4 +42,6 @@ Les 33 tests instrumentés portent sur le build debug. L’essai du paquet optim
 
 Preuves d’exécution : `test-results/audit-build-0.6.0.txt`, `test-results/audit-android-0.6.0.txt`, `test-results/program-tests-0.6.0.xml`, `test-results/unit-tests-0.6.0.xml`, `test-results/audit-content-0.6.0.txt` et `test-results/audit-guide-0.6.0.txt`. Les exécutions de CI sont consultables dans le [workflow Android](https://github.com/raphaelmounirprivate-dot/full-body/actions/workflows/android.yml) ; une configuration présente ne constitue pas à elle seule une exécution réussie.
 
+Première exécution complète vérifiée : [CI réussie du commit 655d490](https://github.com/raphaelmounirprivate-dot/full-body/actions/runs/40491672701). La première tentative avait échoué avant les tests, car `sdkmanager` n’était pas disponible sur le PATH du runner ; le workflow prépare désormais explicitement le SDK.
+
 Limite de performance : le cache supprime les redécodages et revalidations des séances inchangées, mais les lectures SQL et le modèle de liste restent proportionnels à l’historique. Aucun temps constant ni benchmark sur 10 000 séances n’est revendiqué. La base SQLite entière endommagée n’est pas assimilée au cas traité ici d’une ligne JSON invalide.
