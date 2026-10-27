@@ -163,9 +163,25 @@ fun CoachHome(
 @Composable
 private fun ProgramSelector(vm: CoachViewModel, program: String, start: Long) {
     val context = LocalContext.current
+    val sessions by vm.sessions.collectAsStateWithLifecycle()
+    var restart by remember { mutableStateOf(false) }
     Panel("Mon programme") {
         Text("Guide personnel Jims Namur · 31 pages")
         if (program == Programs.CYCLE) {
+            if (Rules.cycleHasEnded(start, System.currentTimeMillis())) {
+                val pending = sessions.any { it.program == Programs.CYCLE && it.finished == null }
+                Text(
+                    "Les huit semaines calendaires sont écoulées. Votre historique reste conservé."
+                )
+                Button(onClick = { restart = true }, enabled = !pending) {
+                    Text("Recommencer en semaine 1")
+                }
+                if (pending)
+                    Text(
+                        "Reprenez et terminez les séances du cycle encore en pause avant de recommencer.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+            }
             Text(
                 if (start == 0L) "La semaine 1 commence à votre première séance du cycle."
                 else "Départ : ${date(start).substringBefore('·')}"
@@ -200,6 +216,27 @@ private fun ProgramSelector(vm: CoachViewModel, program: String, start: Long) {
             )
         }
     }
+    if (restart)
+        AlertDialog(
+            onDismissRequest = { restart = false },
+            title = { Text("Recommencer un cycle ?") },
+            text = {
+                Text(
+                    "La date de départ passe à aujourd'hui. Les anciennes séances et leurs semaines restent conservées."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        restart = false
+                        vm.restartCycle()
+                    }
+                ) {
+                    Text("Recommencer")
+                }
+            },
+            dismissButton = { TextButton(onClick = { restart = false }) { Text("Annuler") } },
+        )
 }
 
 @Composable

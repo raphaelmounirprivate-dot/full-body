@@ -1,5 +1,17 @@
 # Historique des versions
 
+## 0.6.0 — 27 octobre 2026
+
+- Lecture tolérante aux lignes de séance invalides, avertissement et export JSON des données brutes de récupération.
+- Messages de validation en français et validation des imports avec le catalogue propre à chaque programme.
+- Suppression de l’ancienne règle de progression inutilisée ; tests centrés sur `Programs.canIncrease`.
+- Room 2→3 : brouillons enregistrés champ par champ, lecture transactionnelle et cache de décodage des lignes inchangées.
+- Compte à rebours isolé ; découpage des écrans hors de `MainActivity.kt`.
+- Copies PDF mobiles compressées ; originaux et empreintes conservés dans les sources. Images historiques converties en WebP. R8 et réduction des ressources activés pour release.
+- Bouton de nouveau cycle après huit semaines calendaires, avec conservation de l’historique.
+- Protection CSV étendue aux préfixes tabulation et retour chariot ; CI JVM/lint sur GitHub.
+- Nettoyage des archives d’outils extraites et des anciens APK/AAB, avec conservation des sources et de la référence 0.5.0.
+
 ## 0.5.0 — 26 octobre 2026
 
 - Choix A/B/C accessible avec « Changer » en haut de la séance, ou « Choisir A, B ou C » avant de commencer.

@@ -1,0 +1,11 @@
+{
+  "upgrade": "Base Room v2 issue de 0.5.0 vers Room v3, APK optimise final",
+  "optimizedApk": true,
+  "optimizedApkSha256": "7cb9c3520c88c11f02650211603e4d99793cb99e9b7c9f1646e8e751d535be44",
+  "validatedKg": 25,
+  "draftKg": "27",
+  "recoveryExportVersion": 4,
+  "recoveryExportPreservesCorruptRow": true,
+  "exportSha256": "b19e53b1fb09db91b3f225229ce0e0d99b2b1d1a33f2f93af5063bb2030982d6",
+  "switchABAKeepsDraftAndSet": true
+}

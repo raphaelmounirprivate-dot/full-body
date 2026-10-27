@@ -8,15 +8,18 @@ Construire une application Android personnelle en français pour suivre un progr
 
 - Interface : Kotlin et Jetpack Compose Material 3, navigation entre accueil, séance, progression et exercices.
 - État : ViewModel, coroutines et Flow ; logique métier séparée des écrans.
-- Règles : `Domain.kt` et `Programs.kt` portent les données, prescriptions et conditions de progression.
+- Règles : `Domain.kt` porte les données et les validations simples ; `Programs.canIncrease` est l’unique règle de progression utilisée et testée.
 - Stockage : repository dans `Storage.kt`, Room pour les séances et bilans, DataStore pour les préférences.
 - Sauvegardes : JSON et CSV avec validation avant remplacement transactionnel.
-- Repos : `RestScheduler.kt`, minuteur et notifications locales facultatives.
-- Contenu : guide PDF original, fiches structurées et illustrations embarquées dans les assets.
+- Repos : `RestScheduler.kt` pour les notifications, `RestTimerCard.kt` pour le compte à rebours. Les tics ne recomposent pas le reste de la séance.
+- Écrans : `WorkoutScreen.kt`, `SetEditor.kt`, `SessionSummary.kt`, `ExerciseScreen.kt` et `ProgressScreen.kt` ; `MainActivity.kt` conserve l’entrée et la navigation.
+- Contenu : originaux PDF conservés dans `docs/sources/`, copies mobiles et illustrations dans les assets.
 
-Room utilise une migration explicite de la version 1 vers la version 2. Une ancienne séance conserve son programme, sa semaine, ses options, son unité et ses paramètres. Une suggestion de progression ne modifie jamais automatiquement la charge.
+Room conserve la migration 1→2 et ajoute 2→3 pour les champs de brouillon. Une frappe ne réécrit plus le payload JSON complet. Les anciennes séances, leurs brouillons intégrés, leur semaine, leurs options et leurs unités restent conservés. Une lecture transactionnelle des séances et de leurs brouillons évite d’assembler deux états provenant d’instants différents. Le cache de `SessionRowDecoder` revalide uniquement les payloads modifiés ; les lectures SQL restent proportionnelles à l’historique et ne sont pas annoncées comme un coût constant. Une suggestion de progression ne modifie jamais automatiquement la charge.
 
 Depuis 0.5.0, `Training.paused` est un champ optionnel du payload JSON existant, avec valeur par défaut `false` : aucune migration de table supplémentaire. `SportRepository.activate` met la séance précédente en pause et active la suivante dans une transaction. Une reprise conserve l’identité et tous les paramètres de la séance. Le minuteur est annulé avant le changement ; les saisies et validations portent l’identifiant de leur séance pour éviter une écriture tardive dans une autre séance. JSON/CSV format 3 conservent les pauses, les anciens formats restent importables. La rotation et les derniers passages utilisent la date de fin réelle.
+
+Depuis 0.6.0, une ligne locale illisible reste dans la base, mais est exclue des séances utilisables et signalée par un avertissement. L’export JSON utilise alors la version 4 de récupération avec un bloc `recovery` contenant les lignes et brouillons bruts, pour que les anciens APK refusent aussi ce fichier. Les sauvegardes ordinaires restent en version 3. Son import automatique est refusé tant qu’il n’a pas été examiné et réparé ; un import valide remplace les données locales après confirmation, il faut donc exporter avant ce remplacement. Les erreurs de format et de validation sont expliquées en français. Chaque séance est validée avec le catalogue de son propre programme. Une hausse de charge n’est pas suggérée lorsqu’une ligne illisible empêche de garantir l’historique complet.
 
 ## Construire sur un autre poste
 

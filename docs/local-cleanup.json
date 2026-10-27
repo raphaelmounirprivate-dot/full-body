@@ -1,0 +1,71 @@
+{
+  "applied": true,
+  "removedBytes": 1332624354,
+  "files": [
+    {
+      "path": ".tools/android.zip",
+      "bytes": 143040480
+    },
+    {
+      "path": ".tools/emulator.zip",
+      "bytes": 459732447
+    },
+    {
+      "path": ".tools/gradle.zip",
+      "bytes": 136983045
+    },
+    {
+      "path": ".tools/jdk.zip",
+      "bytes": 186591472
+    },
+    {
+      "path": "output/v0.1.0/Mon-Coach-Sport-debug.apk",
+      "bytes": 22921818
+    },
+    {
+      "path": "output/v0.1.0/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 12755459
+    },
+    {
+      "path": "output/v0.2.0/Mon-Coach-Sport-debug.apk",
+      "bytes": 16452405
+    },
+    {
+      "path": "output/v0.2.0/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 12807874
+    },
+    {
+      "path": "output/v0.2.1/Mon-Coach-Sport-debug.apk",
+      "bytes": 16221906
+    },
+    {
+      "path": "output/v0.2.1/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 12808789
+    },
+    {
+      "path": "output/v0.3.0/Mon-Coach-Sport-debug.apk",
+      "bytes": 54127597
+    },
+    {
+      "path": "output/v0.3.0/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 50142003
+    },
+    {
+      "path": "output/v0.3.1/Mon-Coach-Sport-debug.apk",
+      "bytes": 53864542
+    },
+    {
+      "path": "output/v0.3.1/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 50141446
+    },
+    {
+      "path": "output/v0.4.0/Mon-Coach-Sport-debug.apk",
+      "bytes": 53880926
+    },
+    {
+      "path": "output/v0.4.0/Mon-Coach-Sport-release-non-signe.aab",
+      "bytes": 50152145
+    }
+  ],
+  "kept": "Outils extraits, archives source et version 0.5.0 de retour arrière conservés."
+}

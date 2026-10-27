@@ -25,7 +25,9 @@ object HistoryCsv {
             "état_séance_json",
         )
 
-    private fun dangerous(s: String) = s.trimStart().firstOrNull() in listOf('=', '+', '-', '@')
+    private fun dangerous(s: String) =
+        s.firstOrNull() in listOf('\t', '\r', '\n') ||
+            s.trimStart().firstOrNull() in listOf('=', '+', '-', '@')
 
     private fun cell(value: String): String {
         val safe = if (dangerous(value) || value.startsWith("'")) "'$value" else value
@@ -67,7 +69,14 @@ object HistoryCsv {
         }
     }
 
-    fun decode(raw: String): List<Training> {
+    fun decode(raw: String): List<Training> =
+        try {
+            decodeRows(raw)
+        } catch (e: NumberFormatException) {
+            throw IllegalArgumentException("Une valeur numérique du CSV est invalide.", e)
+        }
+
+    private fun decodeRows(raw: String): List<Training> {
         require(raw.length <= 5_000_000) { "Fichier trop volumineux" }
         val rows = parse(raw.removePrefix("\uFEFF"))
         require(rows.isNotEmpty() && rows.first() == header) {
@@ -80,8 +89,10 @@ object HistoryCsv {
                 }
                 val r = row.map(::original)
                 val t = Codec.decode(r[15])
-                require(row[0] == "3" || !t.paused)
-                require(t.sets.isEmpty())
+                require(row[0] == "3" || !t.paused) { "Les pauses nécessitent un CSV au format 3" }
+                require(t.sets.isEmpty()) {
+                    "Les séries CSV doivent être dans leurs colonnes, pas dans les métadonnées"
+                }
                 require(
                     r[1] == t.id &&
                         r[2] == t.program &&
@@ -93,7 +104,9 @@ object HistoryCsv {
                 }
                 val set =
                     if (r[6].isBlank()) {
-                        require(r.subList(7, 15).all { it.isBlank() })
+                        require(r.subList(7, 15).all { it.isBlank() }) {
+                            "Une ligne sans exercice contient des valeurs de série"
+                        }
                         null
                     } else
                         LoggedSet(
@@ -104,10 +117,20 @@ object HistoryCsv {
                                 r[11].toInt(),
                                 r[12],
                                 r[13],
-                                done = r[14].toBooleanStrict(),
+                                done =
+                                    r[14].let {
+                                        require(it in listOf("true", "false")) {
+                                            "Le statut de validation CSV doit être true ou false"
+                                        }
+                                        it.toBoolean()
+                                    },
                                 loadUnit = r[9],
                             )
-                            .also { require(Rules.validate(it)) }
+                            .also {
+                                require(Rules.validate(it)) {
+                                    "Une série CSV contient une charge, une valeur, un RIR ou une unité invalide"
+                                }
+                            }
                 Triple(t, set, r[15])
             }
         return data
@@ -117,7 +140,9 @@ object HistoryCsv {
                 require(group.map { it.third }.distinct().size == 1) {
                     "Séance dupliquée incohérente"
                 }
-                require(group.size == 1 || group.all { it.second != null })
+                require(group.size == 1 || group.all { it.second != null }) {
+                    "Une séance CSV mélange des lignes vides et des séries"
+                }
                 Codec.decode(
                     Codec.encode(group.first().first.copy(sets = group.mapNotNull { it.second }))
                 )

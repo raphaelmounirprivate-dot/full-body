@@ -7,6 +7,26 @@ import org.junit.Rule
 import org.junit.Test
 
 class WorkoutUiTest {
+    @Test fun restartingCycleKeepsCompletedSessionAndItsWeek() {
+        val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
+        vm.start("A")
+        compose.waitUntil(10000) { vm.active != null }
+        vm.log(LoggedSet("F1", 0, 20.0, 12, 3, "Presse", "Siège 3"))
+        compose.waitUntil(10000) { vm.active?.sets?.size == 1 }
+        vm.finish("Conserver", "0", "5", "", "Vélo", "3")
+        compose.waitUntil(10000) { vm.completed.size == 1 }
+        val previous = vm.completed.single()
+        val old = System.currentTimeMillis() - 57L * 86400000
+        vm.setCycleStart(old)
+        compose.waitUntil(10000) { vm.cycleStart.value == old }
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex))
+            .performScrollToNode(hasText("Recommencer en semaine 1"))
+        compose.onNodeWithText("Recommencer en semaine 1").performClick()
+        compose.onNodeWithText("Recommencer", useUnmergedTree = true).performClick()
+        compose.waitUntil(10000) { vm.cycleStart.value > old + 86400000 }
+        org.junit.Assert.assertEquals(previous, vm.completed.single())
+        org.junit.Assert.assertEquals(1, Rules.week(vm.cycleStart.value, System.currentTimeMillis()))
+    }
     private fun chooseSession(template: String) {
         compose.onNodeWithContentDescription("Changer de séance").assertIsDisplayed().performClick()
         compose.onNodeWithContentDescription("Choisir la séance $template").performClick()
@@ -131,6 +151,8 @@ class WorkoutUiTest {
         vm.eraseAll()
         compose.waitUntil(10000) {
             vm.message.value == "Toutes les données et préférences ont été supprimées" &&
+                vm.databaseState.value.loaded &&
+                vm.databaseState.value.sessions.isEmpty() &&
                 vm.sessions.value.isEmpty() &&
                 vm.cycleStart.value == 0L
         }
@@ -199,6 +221,9 @@ class WorkoutUiTest {
         compose.onNodeWithText("Installer").assertExists()
         compose.onNodeWithText("Fermer la fiche").performClick()
         compose.onNodeWithText("Réintégrer cet exercice").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Sauter cet exercice").fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithText("Sauter cet exercice").assertExists()
     }
 

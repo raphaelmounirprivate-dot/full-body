@@ -17,11 +17,25 @@ class GuideTests(unittest.TestCase):
     def setUpClass(cls):
         cls.mapping=json.loads((ROOT/'docs/guide-source-mapping.json').read_text('utf-8'))
         cls.exercises=json.loads((ASSETS/'exercises.json').read_text('utf-8'))
-        cls.pdf=PdfReader(ASSETS/cls.mapping['source'])
+        cls.original=ROOT/'docs/sources'/cls.mapping['source']
+        cls.pdf=PdfReader(cls.original)
 
     def test_original_guide_kept_with_its_hash(self):
         self.assertEqual(31,len(self.pdf.pages))
-        self.assertEqual(self.mapping['sha256'],hashlib.sha256((ASSETS/self.mapping['source']).read_bytes()).hexdigest())
+        self.assertEqual(self.mapping['sha256'],hashlib.sha256(self.original.read_bytes()).hexdigest())
+
+    def test_mobile_pdf_preserves_all_text_and_page_sizes(self):
+        records=json.loads((ROOT/'docs/asset-optimization.json').read_text('utf-8'))
+        for record in records:
+            original=ROOT/record['original'];mobile=ROOT/record['asset']
+            self.assertEqual(record['originalSha256'],hashlib.sha256(original.read_bytes()).hexdigest())
+            self.assertEqual(record['sha256'],hashlib.sha256(mobile.read_bytes()).hexdigest())
+            before=PdfReader(original);after=PdfReader(mobile)
+            self.assertEqual(len(before.pages),len(after.pages))
+            self.assertLess(mobile.stat().st_size,original.stat().st_size/3)
+            for a,b in zip(before.pages,after.pages):
+                self.assertEqual(a.extract_text(),b.extract_text())
+                self.assertEqual(list(a.mediabox),list(b.mediabox))
 
     def test_nineteen_fiches_keep_source_order(self):
         self.assertEqual([f'F{i}' for i in range(1,20)],[e['id'] for e in self.exercises])

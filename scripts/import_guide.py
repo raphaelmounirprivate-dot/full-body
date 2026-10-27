@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = Path(r'C:\Users\Darkmoon\Documents\Codex\2026-10-25\a\outputs\Programme_Jims_Namur_images_uniformisees.pdf')
+DEFAULT_SOURCE = ROOT/'docs/sources/Programme_Jims_Namur_images_uniformisees.pdf'
 
 
 def normalize(text):

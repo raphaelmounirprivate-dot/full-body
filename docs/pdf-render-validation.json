@@ -1,0 +1,14 @@
+[
+  {
+    "asset": "app/src/main/assets/guide/Programme_Jims_Namur_images_uniformisees.pdf",
+    "pagesRendered": 31,
+    "maxMeanPixelError": 0.4851411096409423,
+    "contact": "guide-mobile-contact.jpg"
+  },
+  {
+    "asset": "app/src/main/assets/Programme_full_body_machines.pdf",
+    "pagesRendered": 8,
+    "maxMeanPixelError": 0.27197282490288915,
+    "contact": "legacy-mobile-contact.jpg"
+  }
+]

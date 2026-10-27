@@ -11,6 +11,9 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class StorageTest {
+    private suspend fun SportRepository.restore(raw: String, ids: Set<String>) =
+        restore(raw, Programs.ids.associateWith { ids })
+
     @Test
     fun switchingSessionsKeepsAllDataAndOneActiveSession() = runBlocking {
         val repo = SportRepository(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -189,7 +192,7 @@ class StorageTest {
         try {
             Codec.decode("{\"id\":\"bad\"}")
             fail("Devrait être refusé")
-        } catch (_: org.json.JSONException) {}
+        } catch (_: IllegalArgumentException) {}
     }
 
     @Test
@@ -244,7 +247,7 @@ class StorageTest {
         }
         val migrated =
             Room.databaseBuilder(context, SportDatabase::class.java, name)
-                .addMigrations(SportDatabase.MIGRATION_1_2)
+                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3)
                 .build()
         try {
             assertEquals(

@@ -1,0 +1,20 @@
+[
+  {
+    "original": "docs/sources/Programme_Jims_Namur_images_uniformisees.pdf",
+    "originalSha256": "c1a07a0415313fef7d2d2987502683a9823845c79d30f658b393a51356a1c523",
+    "asset": "app/src/main/assets/guide/Programme_Jims_Namur_images_uniformisees.pdf",
+    "sha256": "c5b167b6d7d767bb4cd64bed0dd477c4ec8cefd46bf722f14fffe37fcab43baa",
+    "originalBytes": 43728750,
+    "bytes": 2491640,
+    "pages": 31
+  },
+  {
+    "original": "docs/sources/Programme_full_body_machines.pdf",
+    "originalSha256": "7bcae51017bdf3c85cdd5921b66ddc7c257c23bb82df77e37aaad7d116a21490",
+    "asset": "app/src/main/assets/Programme_full_body_machines.pdf",
+    "sha256": "0bebb9c4b2b25d65280f8a3c0fde9ef71d862876b08c9e3b07cfbeef9638c58d",
+    "originalBytes": 3924716,
+    "bytes": 894603,
+    "pages": 8
+  }
+]

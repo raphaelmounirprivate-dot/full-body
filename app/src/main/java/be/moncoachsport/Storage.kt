@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import org.json.*
 
@@ -30,7 +31,13 @@ data class SessionRecord(@PrimaryKey val id: String, val payload: String)
 interface SessionDao {
     @Query("SELECT * FROM sessions") fun observe(): Flow<List<SessionRecord>>
 
+    @Transaction
+    @Query("SELECT * FROM sessions")
+    fun observeWithDrafts(): Flow<List<SessionWithDrafts>>
+
     @Query("SELECT * FROM sessions") suspend fun read(): List<SessionRecord>
+
+    @Query("SELECT * FROM sessions WHERE id = :id") suspend fun find(id: String): SessionRecord?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(row: SessionRecord)
 
@@ -41,6 +48,30 @@ interface SessionDao {
         clear()
         rows.forEach { put(it) }
     }
+}
+
+@Entity(tableName = "session_drafts", primaryKeys = ["sessionId", "field"])
+data class DraftRecord(val sessionId: String, val field: String, val value: String)
+
+data class SessionWithDrafts(
+    @Embedded val session: SessionRecord,
+    @Relation(parentColumn = "id", entityColumn = "sessionId") val drafts: List<DraftRecord>,
+)
+
+@Dao
+interface DraftDao {
+    @Query("SELECT * FROM session_drafts") fun observe(): Flow<List<DraftRecord>>
+
+    @Query("SELECT * FROM session_drafts") suspend fun read(): List<DraftRecord>
+
+    @Query("SELECT * FROM session_drafts WHERE sessionId = :id")
+    suspend fun readSession(id: String): List<DraftRecord>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(draft: DraftRecord)
+
+    @Query("DELETE FROM session_drafts WHERE sessionId = :id") suspend fun clearSession(id: String)
+
+    @Query("DELETE FROM session_drafts") suspend fun clear()
 }
 
 @Entity(tableName = "weekly_reviews", primaryKeys = ["cycleStart", "week"])
@@ -62,13 +93,27 @@ interface ReviewDao {
     @Query("DELETE FROM weekly_reviews") suspend fun clear()
 }
 
-@Database(entities = [SessionRecord::class, WeeklyReview::class], version = 2, exportSchema = false)
+@Database(
+    entities = [SessionRecord::class, WeeklyReview::class, DraftRecord::class],
+    version = 3,
+    exportSchema = false,
+)
 abstract class SportDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
 
     abstract fun reviews(): ReviewDao
 
+    abstract fun drafts(): DraftDao
+
     companion object {
+        val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `session_drafts` (`sessionId` TEXT NOT NULL, `field` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`sessionId`, `field`))"
+                    )
+                }
+            }
         val MIGRATION_1_2 =
             object : Migration(1, 2) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -126,7 +171,17 @@ object Codec {
             }
             .toString()
 
-    fun decode(raw: String): Training {
+    fun decode(raw: String): Training =
+        try {
+            decodeFields(raw)
+        } catch (e: JSONException) {
+            throw IllegalArgumentException(
+                "Séance illisible : un champ obligatoire est absent ou mal formé.",
+                e,
+            )
+        }
+
+    private fun decodeFields(raw: String): Training {
         val j = JSONObject(raw)
         val sets =
             j.getJSONArray("sets").let { a ->
@@ -151,15 +206,18 @@ object Codec {
             "Séries dupliquées"
         }
         val drafts =
-            j.optJSONObject("drafts")?.let { d ->
+            (if (j.has("drafts")) j.getJSONObject("drafts") else null)?.let { d ->
                 d.keys().asSequence().associateWith { d.getString(it) }
             } ?: emptyMap()
-        require(drafts.size <= 500 && drafts.values.all { it.length <= 10000 })
+        require(drafts.size <= 500 && drafts.values.all { it.length <= 10000 }) {
+            "Trop de brouillons ou texte trop long dans la séance"
+        }
         fun ids(key: String) =
-            j.optJSONArray(key)?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() }
-                ?: emptySet()
+            (if (j.has(key)) j.getJSONArray(key) else null)?.let { a ->
+                (0 until a.length()).map { a.getString(it) }.toSet()
+            } ?: emptySet()
         val alternatives =
-            j.optJSONObject("alternatives")?.let { a ->
+            (if (j.has("alternatives")) j.getJSONObject("alternatives") else null)?.let { a ->
                 a.keys().asSequence().associateWith { a.getString(it) }
             } ?: emptyMap()
         return Training(
@@ -173,10 +231,10 @@ object Codec {
                 j.getInt("energy"),
                 j.getString("discomfort"),
                 j.optString("cardioMachine", "Vélo"),
-                j.optInt("intensity", 3),
+                if (j.has("intensity")) j.getInt("intensity") else 3,
                 drafts,
                 j.optString("program", Programs.LEGACY),
-                j.optInt("week", 1),
+                if (j.has("week")) j.getInt("week") else 1,
                 ids("skipped"),
                 ids("extraSets"),
                 alternatives,
@@ -188,9 +246,15 @@ object Codec {
                         it.id.isNotBlank() &&
                         it.started > 0 &&
                         (it.finished == null || it.finished >= it.started)
-                )
-                require(it.cardio in 0..600 && it.energy in 0..10 && it.intensity in 0..10)
-                require(it.program in Programs.ids && it.week in 1..8)
+                ) {
+                    "Type, identifiant ou dates de séance invalides"
+                }
+                require(it.cardio in 0..600 && it.energy in 0..10 && it.intensity in 0..10) {
+                    "Bilan invalide : minutes de 0 à 600, énergie et effort de 0 à 10"
+                }
+                require(it.program in Programs.ids && it.week in 1..8) {
+                    "Programme inconnu ou semaine hors de la plage 1 à 8"
+                }
                 require(!it.paused || it.finished == null) {
                     "Une séance terminée ne peut pas être en pause"
                 }
@@ -212,12 +276,16 @@ object Codec {
                     require(plan.map { it.id }.distinct().size == plan.size) {
                         "Remplacement dupliqué"
                     }
-                    require(it.skipped.all { id -> plan.any { p -> p.id == id && p.optional } })
+                    require(it.skipped.all { id -> plan.any { p -> p.id == id && p.optional } }) {
+                        "Un exercice obligatoire ou inconnu a été marqué comme sauté"
+                    }
                     require(
                         it.extraSets.all { id ->
                             it.week >= 5 && plan.take(3).any { p -> p.id == id }
                         }
-                    )
+                    ) {
+                        "Troisième série non autorisée pour cet exercice ou cette semaine"
+                    }
                     require(
                         it.sets.all { s ->
                             val p = plan.firstOrNull { p -> p.id == s.exerciseId }
@@ -225,25 +293,41 @@ object Codec {
                                 s.exerciseId !in it.skipped &&
                                 s.index < 2 + if (s.exerciseId in it.extraSets) 1 else 0
                         }
-                    )
+                    ) {
+                        "Une série ne correspond pas aux exercices ou options de la séance"
+                    }
                 } else
                     require(
                         it.skipped.isEmpty() && it.extraSets.isEmpty() && it.alternatives.isEmpty()
-                    )
+                    ) {
+                        "L'ancien programme ne permet pas ces options ou remplacements"
+                    }
             }
     }
 }
 
-class SportRepository(context: Context) {
+class SportRepository(context: Context, database: SportDatabase? = null) {
     private val db =
-        Room.databaseBuilder(context.applicationContext, SportDatabase::class.java, "sport.db")
-            .addMigrations(SportDatabase.MIGRATION_1_2)
-            .build()
+        database
+            ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    SportDatabase::class.java,
+                    "sport.db",
+                )
+                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3)
+                .build()
     private val prefs = context.applicationContext.preferences
-    val sessions =
-        db.sessions().observe().map { rows ->
-            rows.map { Codec.decode(it.payload) }.sortedBy { it.started }
-        }
+    private val decoder = SessionRowDecoder()
+    val snapshots = db.sessions().observeWithDrafts().map { rows ->
+        decoder.readAll(rows.map { it.session }, rows.flatMap { it.drafts })
+    }.flowOn(Dispatchers.Default)
+    val sessions = snapshots.map { it.sessions }.distinctUntilChanged()
+
+    suspend fun snapshotNow(): SessionReadModel =
+        db.withTransaction { decoder.readAll(db.sessions().read(), db.drafts().read()) }
+
+    suspend fun currentSessions(): List<Training> = snapshotNow().sessions
+
     val reviews = db.reviews().observe()
     val program = prefs.data.map { it[stringPreferencesKey("program")] ?: Programs.CYCLE }
     val cycleStart = prefs.data.map { it[longPreferencesKey("cycleStart")] ?: 0L }
@@ -264,12 +348,14 @@ class SportRepository(context: Context) {
     }
 
     suspend fun setCycleStart(value: Long) {
-        require(value > 0)
+        require(value > 0) { "La date de départ du cycle est invalide" }
         prefs.edit { it[longPreferencesKey("cycleStart")] = value }
     }
 
     suspend fun saveReview(review: WeeklyReview) {
-        require(review.week in 1..8 && review.recovery in 0..10 && review.notes.length <= 10000)
+        require(review.week in 1..8 && review.recovery in 0..10 && review.notes.length <= 10000) {
+            "Bilan hebdomadaire invalide : semaine de 1 à 8, récupération de 0 à 10, notes limitées à 10 000 caractères"
+        }
         db.reviews().put(review)
     }
 
@@ -297,13 +383,39 @@ class SportRepository(context: Context) {
         prefs.edit { it[booleanPreferencesKey("dark")] = value }
     }
 
-    suspend fun save(t: Training) = db.sessions().put(SessionRecord(t.id, Codec.encode(t)))
+    suspend fun save(t: Training) =
+        db.withTransaction {
+            db.sessions().put(SessionRecord(t.id, Codec.encode(t)))
+            db.drafts().clearSession(t.id)
+        }
+
+    suspend fun saveDraft(id: String, field: String, value: String) =
+        db.withTransaction {
+            require(field.isNotBlank() && field.length <= 200 && value.length <= 10000) {
+                "Champ de saisie invalide ou texte trop long"
+            }
+            val row =
+                db.sessions().find(id)
+                    ?: throw IllegalArgumentException("La séance à modifier n'existe plus")
+            require(decoder.read(row).getOrThrow().isActive) { "La séance n'est plus active" }
+            val known =
+                db.drafts().readSession(id).map { it.field }.toSet() +
+                    decoder.read(row).getOrThrow().drafts.keys
+            require(field in known || known.size < 500) {
+                "La séance contient trop de champs de saisie"
+            }
+            db.drafts().put(DraftRecord(id, field, value))
+        }
 
     suspend fun activate(target: Training) {
         require(target.finished == null) { "Cette séance est déjà terminée" }
         Codec.decode(Codec.encode(target))
         db.withTransaction {
-            val data = db.sessions().read().map { Codec.decode(it.payload) }
+            val snapshot = snapshotNow()
+            require(snapshot.unreadable.none { it.id == target.id }) {
+                "Cette séance est illisible : exportez ses données avant toute récupération"
+            }
+            val data = snapshot.sessions
             require(
                 data.none {
                     it.id != target.id &&
@@ -315,7 +427,7 @@ class SportRepository(context: Context) {
                 "Une séance de ce type attend déjà une reprise"
             }
             val next = data.firstOrNull { it.id == target.id } ?: target
-            require(next.finished == null)
+            require(next.finished == null) { "Cette séance est déjà terminée" }
             data.filter { it.isActive && it.id != next.id }.forEach { save(it.copy(paused = true)) }
             save(next.copy(paused = false))
         }
@@ -324,6 +436,7 @@ class SportRepository(context: Context) {
     suspend fun erase() =
         db.withTransaction {
             db.sessions().clear()
+            db.drafts().clear()
             db.reviews().clear()
         }
 
@@ -334,14 +447,32 @@ class SportRepository(context: Context) {
 
     fun close() = db.close()
 
-    suspend fun restore(raw: String, exercises: Set<String>) {
+    suspend fun restore(raw: String, catalogues: Map<String, Set<String>>) =
+        try {
+            restoreValidated(raw, catalogues)
+        } catch (e: JSONException) {
+            throw IllegalArgumentException(
+                "Sauvegarde JSON illisible : un champ obligatoire est absent ou mal formé.",
+                e,
+            )
+        }
+
+    private suspend fun restoreValidated(raw: String, catalogues: Map<String, Set<String>>) {
         require(raw.length <= 5_000_000) { "Sauvegarde trop volumineuse" }
         val j = JSONObject(raw)
+        require(!j.has("recovery")) {
+            "Cette sauvegarde contient des lignes illisibles à récupérer. Aucune donnée n'a été remplacée."
+        }
         require(j.getInt("version") in 1..3) { "Version inconnue" }
         val a = j.getJSONArray("sessions")
-        require(a.length() <= 10000)
+        require(a.length() <= 10000) { "La sauvegarde dépasse la limite de 10 000 séances" }
         val data = (0 until a.length()).map { Codec.decode(a.getJSONObject(it).toString()) }
-        require(data.map { it.id }.distinct().size == data.size && data.count { it.isActive } <= 1)
+        require(data.map { it.id }.distinct().size == data.size) {
+            "La sauvegarde contient des identifiants de séance dupliqués"
+        }
+        require(data.count { it.isActive } <= 1) {
+            "La sauvegarde contient plusieurs séances actives"
+        }
         require(j.getInt("version") >= 3 || data.none { it.paused }) {
             "Les séances en pause nécessitent une sauvegarde version 3"
         }
@@ -351,9 +482,13 @@ class SportRepository(context: Context) {
         ) {
             "Plusieurs séances non terminées du même type"
         }
-        require(data.all { t -> t.sets.all { it.exerciseId in exercises } }) { "Exercice inconnu" }
-        val reviewArray = j.optJSONArray("reviews") ?: JSONArray()
-        require(reviewArray.length() <= 10000)
+        require(data.all { t -> t.sets.all { it.exerciseId in catalogues[t.program].orEmpty() } }) {
+            "Un exercice n'appartient pas au catalogue de son programme"
+        }
+        val reviewArray = if (j.has("reviews")) j.getJSONArray("reviews") else JSONArray()
+        require(reviewArray.length() <= 10000) {
+            "La sauvegarde dépasse la limite de 10 000 bilans"
+        }
         val reviews =
             (0 until reviewArray.length()).map { i ->
                 reviewArray.getJSONObject(i).let { r ->
@@ -374,14 +509,26 @@ class SportRepository(context: Context) {
                     it.notes.length <= 10000 &&
                     it.updated > 0
             }
-        )
-        require(reviews.map { it.cycleStart to it.week }.distinct().size == reviews.size)
-        val preferences = j.optJSONObject("preferences")
+        ) {
+            "Un bilan hebdomadaire contient une date, une semaine, une note ou une récupération invalide"
+        }
+        require(reviews.map { it.cycleStart to it.week }.distinct().size == reviews.size) {
+            "La sauvegarde contient des bilans hebdomadaires dupliqués"
+        }
+        val preferences = if (j.has("preferences")) j.getJSONObject("preferences") else null
         val importedProgram = preferences?.optString("program", Programs.CYCLE) ?: Programs.CYCLE
-        val importedStart = preferences?.optLong("cycleStart", 0) ?: 0
-        require(importedProgram in Programs.ids && importedStart >= 0)
+        val importedStart =
+            if (preferences?.has("cycleStart") == true) preferences.getLong("cycleStart") else 0
+        require(importedProgram in Programs.ids && importedStart >= 0) {
+            "Le programme ou la date de départ importés sont invalides"
+        }
+        if (preferences != null)
+            listOf("dark", "autoRest", "haptics").forEach {
+                if (preferences.has(it)) preferences.getBoolean(it)
+            }
         db.withTransaction {
             db.sessions().replace(data.map { SessionRecord(it.id, Codec.encode(it)) })
+            db.drafts().clear()
             db.reviews().clear()
             reviews.forEach { db.reviews().put(it) }
         }
@@ -389,9 +536,12 @@ class SportRepository(context: Context) {
             prefs.edit {
                 it[stringPreferencesKey("program")] = importedProgram
                 it[longPreferencesKey("cycleStart")] = importedStart
-                it[booleanPreferencesKey("dark")] = preferences.optBoolean("dark", false)
-                it[booleanPreferencesKey("autoRest")] = preferences.optBoolean("autoRest", true)
-                it[booleanPreferencesKey("haptics")] = preferences.optBoolean("haptics", false)
+                it[booleanPreferencesKey("dark")] =
+                    (if (preferences.has("dark")) preferences.getBoolean("dark") else false)
+                it[booleanPreferencesKey("autoRest")] =
+                    (if (preferences.has("autoRest")) preferences.getBoolean("autoRest") else true)
+                it[booleanPreferencesKey("haptics")] =
+                    (if (preferences.has("haptics")) preferences.getBoolean("haptics") else false)
                 // Ne jamais réactiver une permission de notification via un import.
             }
     }

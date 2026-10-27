@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -42,10 +44,11 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
 
-    val exercises = loadExercises("exercises.json")
+    private val legacyExercises = loadExercises("exercises.json")
     val guideExercises = loadExercises("guide/exercises.json")
 
-    fun exercisesFor(program: String) = if (program == Programs.CYCLE) guideExercises else exercises
+    fun exercisesFor(program: String) =
+        if (program == Programs.CYCLE) guideExercises else legacyExercises
 
     val guideSections =
         JSONArray(app.assets.open("guide/sections.json").bufferedReader().readText()).let { a ->
@@ -55,7 +58,16 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-    val sessions = repository.sessions.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    internal val databaseState =
+        repository.snapshots.stateIn(viewModelScope, SharingStarted.Eagerly, SessionReadModel())
+    val sessions =
+        databaseState
+            .map { it.sessions }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val unreadable =
+        databaseState
+            .map { it.unreadable }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val dark = repository.dark.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val program = repository.program.stateIn(viewModelScope, SharingStarted.Eagerly, Programs.CYCLE)
     val cycleStart = repository.cycleStart.stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
@@ -69,7 +81,9 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setCycleStart(value: Long) = action {
         require(
-            repository.sessions.first().none { it.program == Programs.CYCLE && it.finished == null }
+            repository.currentSessions().none {
+                it.program == Programs.CYCLE && it.finished == null
+            }
         ) {
             "Terminez la séance du cycle avant de changer sa date de départ."
         }
@@ -108,7 +122,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     init {
         viewModelScope.launch {
             repository.preferCurrentGuide()
-            repository.sessions.first()
+            repository.currentSessions()
             ready.value = true
         }
     }
@@ -124,19 +138,21 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             mutex.withLock {
                 try {
                     block()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    message.value = e.message ?: "Opération impossible"
+                    message.value = frenchError(e)
                 }
             }
         }
     }
 
     fun start(requestedTemplate: String? = null) = action {
-        if (!ready.value) return@action
+        ready.first { it }
         require(requestedTemplate == null || requestedTemplate in listOf("A", "B", "C")) {
             "Séance inconnue"
         }
-        val data = repository.sessions.first()
+        val data = repository.currentSessions()
         val current = data.firstOrNull { it.isActive }
         if (requestedTemplate == null && current != null) return@action
         val selected = current?.program ?: repository.program.first()
@@ -188,13 +204,14 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun log(set: LoggedSet, sessionId: String? = null) = action {
         require(Rules.validate(set)) { "Vérifiez charge, répétitions et RIR (0–10)." }
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
         if (sessionId != null && t.id != sessionId) return@action
-        val p = Programs.plan(t, exercises).firstOrNull { it.id == set.exerciseId }
+        val catalogue = exercisesFor(t.program)
+        val p = Programs.plan(t, catalogue).firstOrNull { it.id == set.exerciseId }
         require(
             p != null &&
                 set.exerciseId !in t.skipped &&
-                set.index < Programs.exercise(p, t, exercises).sets
+                set.index < Programs.exercise(p, t, catalogue).sets
         ) {
             "Série hors du programme de cette séance"
         }
@@ -216,8 +233,10 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun skip(id: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
-        require(Programs.plan(t, exercises).any { it.id == id && it.optional })
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
+        require(Programs.plan(t, exercisesFor(t.program)).any { it.id == id && it.optional }) {
+            "Cet exercice n'est pas facultatif dans cette séance"
+        }
         require(t.sets.none { it.exerciseId == id }) {
             "Cet exercice contient déjà des séries : elles sont conservées."
         }
@@ -225,9 +244,11 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun extra(id: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
-        val slot = Programs.plan(t, exercises).indexOfFirst { it.id == id }
-        require(Programs.extraAllowed(t, slot))
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
+        val slot = Programs.plan(t, exercisesFor(t.program)).indexOfFirst { it.id == id }
+        require(Programs.extraAllowed(t, slot)) {
+            "Troisième série non autorisée pour cet exercice ou cette semaine"
+        }
         val removing = id in t.extraSets
         require(removing || t.week in 5..6) { "Semaines 7–8 : conserver un volume stable." }
         require(!removing || t.sets.none { it.exerciseId == id && it.index == 2 }) {
@@ -237,15 +258,19 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun chooseVariant(slot: String, replacement: String) = action {
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
-        require(t.program == Programs.CYCLE)
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
+        require(t.program == Programs.CYCLE) {
+            "Les remplacements ne sont disponibles que dans le cycle de huit semaines"
+        }
         require(Programs.cycle.getValue(t.template).any { it.id == slot }) { "Mouvement inconnu" }
         require(
             replacement == slot ||
                 Programs.variants.any {
                     it.template == t.template && it.slot == slot && it.replacement == replacement
                 }
-        )
+        ) {
+            "Ce remplacement n'est pas autorisé pour cet emplacement"
+        }
         val current = t.alternatives[slot] ?: slot
         require(t.sets.none { it.exerciseId == current }) {
             "Le mouvement est déjà commencé. Ses séries et paramètres sont conservés."
@@ -264,9 +289,9 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
 
     fun saveDraft(key: String, value: String, sessionId: String? = null) = action {
         require(value.length <= 10000) { "Texte trop long" }
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
         if (sessionId != null && t.id != sessionId) return@action
-        repository.save(t.copy(drafts = t.drafts + (key to value)))
+        repository.saveDraft(t.id, key, value)
     }
 
     fun finish(
@@ -278,7 +303,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         intensity: String,
         sessionId: String? = null,
     ) = action {
-        val t = repository.sessions.first().firstOrNull { it.isActive } ?: return@action
+        val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
         if (sessionId != null && t.id != sessionId) return@action
         require(t.sets.any { it.done }) { "Validez au moins une série avant de terminer." }
         val minutes = cardio.toIntOrNull()
@@ -324,12 +349,15 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         message.value = "Toutes les données et préférences ont été supprimées"
     }
 
-    fun exportJson() =
-        JSONObject()
-            .put("version", 3)
+    suspend fun exportJson(): String {
+        val snapshot = repository.snapshotNow()
+        return JSONObject()
+            .put("version", if (snapshot.unreadable.isEmpty()) 3 else 4)
             .put(
                 "sessions",
-                JSONArray().apply { sessions.value.forEach { put(JSONObject(Codec.encode(it))) } },
+                JSONArray().apply {
+                    snapshot.sessions.forEach { put(JSONObject(Codec.encode(it))) }
+                },
             )
             .put(
                 "preferences",
@@ -355,10 +383,49 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 },
             )
+            .apply {
+                if (snapshot.unreadable.isNotEmpty())
+                    put(
+                        "recovery",
+                        JSONObject()
+                            .put(
+                                "rows",
+                                JSONArray().apply {
+                                    snapshot.rows.forEach {
+                                        put(
+                                            JSONObject().put("id", it.id).put("payload", it.payload)
+                                        )
+                                    }
+                                },
+                            )
+                            .put(
+                                "drafts",
+                                JSONArray().apply {
+                                    snapshot.draftRows.forEach {
+                                        put(
+                                            JSONObject()
+                                                .put("sessionId", it.sessionId)
+                                                .put("field", it.field)
+                                                .put("value", it.value)
+                                        )
+                                    }
+                                },
+                            )
+                            .put(
+                                "unreadable",
+                                JSONArray().apply {
+                                    snapshot.unreadable.forEach {
+                                        put(JSONObject().put("id", it.id).put("reason", it.reason))
+                                    }
+                                },
+                            ),
+                    )
+            }
             .toString(2)
+    }
 
-    fun exportCsv(): String {
-        return HistoryCsv.encode(sessions.value)
+    suspend fun exportCsv(): String {
+        return HistoryCsv.encode(repository.currentSessions())
     }
 
     fun restore(raw: String) = action {
@@ -369,10 +436,33 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                 parsed.put("reviews", JSONObject(exportJson()).getJSONArray("reviews"))
                 parsed.toString()
             }
-        repository.restore(backup, exercises.map { it.id }.toSet())
+        repository.restore(
+            backup,
+            Programs.ids.associateWith { p -> exercisesFor(p).map { it.id }.toSet() },
+        )
         repository.preferCurrentGuide()
         repository.setTimer(0, 0)
         scheduler.update(0, false)
         message.value = "Sauvegarde restaurée"
+    }
+
+    fun restartCycle() = action {
+        require(
+            repository.currentSessions().none {
+                it.program == Programs.CYCLE && it.finished == null
+            }
+        ) {
+            "Reprenez et terminez les séances du cycle en pause avant de recommencer en semaine 1."
+        }
+        repository.setCycleStart(System.currentTimeMillis())
+        repository.setTimer(0, 0)
+        scheduler.update(0, false)
+        message.value = "Nouveau cycle commencé en semaine 1. L'historique est conservé."
+    }
+
+    override fun onCleared() {
+        viewModelScope.cancel()
+        repository.close()
+        super.onCleared()
     }
 }

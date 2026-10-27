@@ -58,6 +58,17 @@ data class Training(
 }
 
 object Rules {
+    fun cycleHasEnded(
+        start: Long,
+        now: Long,
+        zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
+    ): Boolean {
+        if (start <= 0) return false
+        val first = java.time.Instant.ofEpochMilli(start).atZone(zone).toLocalDate()
+        val current = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        return java.time.temporal.ChronoUnit.DAYS.between(first, current) >= 56
+    }
+
     fun next(completed: Int) = listOf("A", "B", "C")[completed % 3]
 
     fun week(
@@ -70,25 +81,6 @@ object Rules {
         return (java.time.temporal.ChronoUnit.DAYS.between(first, current).coerceAtLeast(0) / 7 + 1)
             .toInt()
             .coerceAtMost(8)
-    }
-
-    fun canIncrease(
-        exercise: Exercise,
-        passages: List<List<LoggedSet>>,
-        requiredRir: Int,
-    ): Boolean {
-        if (passages.size < 2 || exercise.unit != "rép") return false
-        val last = passages.takeLast(2)
-        val all = last.flatten()
-        return last.all { sets ->
-            sets.size >= exercise.sets &&
-                sets.all { it.done && it.reps >= exercise.max && it.rir >= requiredRir }
-        } &&
-            all.map { listOf(it.machine.trim(), it.setting.trim(), it.kg, it.loadUnit) }
-                .distinct()
-                .size == 1 &&
-            all.first().machine.isNotBlank() &&
-            all.first().setting.isNotBlank()
     }
 
     fun validate(set: LoggedSet): Boolean =

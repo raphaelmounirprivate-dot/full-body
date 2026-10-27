@@ -244,8 +244,9 @@ object Programs {
         machine: String,
         setting: String,
         loadUnit: String,
+        historyComplete: Boolean = true,
     ): Boolean {
-        if (p.unit == "s") return false
+        if (!historyComplete || p.unit == "s") return false
         val prior =
             history
                 .filter {

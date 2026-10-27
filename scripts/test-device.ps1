@@ -1,4 +1,5 @@
-param([string]$DeviceId = 'emulator-5554')
+# Ces tests effacent les données : émulateur QA dédié par défaut.
+param([string]$DeviceId = 'emulator-5556')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 Set-Location $projectRoot

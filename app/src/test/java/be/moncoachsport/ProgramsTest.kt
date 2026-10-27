@@ -6,6 +6,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ProgramsTest {
+    @Test fun unreadableHistoryPreventsUncertainProgressionAdvice() {
+        val t = training()
+        val p = Programs.cycle.getValue("A").first()
+        val completed = listOf(passage("one"), passage("two"))
+        assertTrue(Programs.canIncrease(t,p,completed,exercises,"Presse 1","Siège 3","total"))
+        assertFalse(Programs.canIncrease(t,p,completed,exercises,"Presse 1","Siège 3","total",historyComplete=false))
+    }
     @Test
     fun manualChoiceContinuesAfterTheLastFinishedTemplate() {
         val b = training("B").copy(finished = 2000)
