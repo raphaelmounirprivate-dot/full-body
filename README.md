@@ -12,11 +12,17 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 Pour tester l’application : [télécharger l’APK optimisé 0.8.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
 
-| Accueil | Séance | Fiche d’exercice |
+| Accueil | Séance et repos | Fiche d’exercice |
 | --- | --- | --- |
-| ![Accueil](docs/screenshots/accueil.png) | ![Séance](docs/screenshots/seance.png) | ![Fiche](docs/screenshots/fiche.png) |
+| ![Accueil de la version 0.8.0](docs/screenshots/accueil-0.8.0.png) | ![Séance avec minuteur et ajustements du repos](docs/screenshots/seance-0.8.0.png) | ![Fiche illustrée dans la version 0.8.0](docs/screenshots/fiche-0.8.0.png) |
 
-Les captures ci-dessus illustrent les versions précédentes. Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation : [résultats 0.8.0](docs/validation-0.8.0.md).
+Captures de l’APK optimisé 0.8.0 sur l’émulateur Android 11, avec des données de démonstration.
+
+| Notification sur écran verrouillé | Widget sur l’accueil Android |
+| --- | --- |
+| ![Décompte natif du repos sur l’écran verrouillé](docs/screenshots/repos-notification-verrouillee-0.8.0.png) | ![Widget Android avec séance et objectif hebdomadaire](docs/screenshots/widget-android-0.8.0.png) |
+
+État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation et captures en grande police : [résultats 0.8.0](docs/validation-0.8.0.md).
 
 ## Développement
 
