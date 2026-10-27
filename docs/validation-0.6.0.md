@@ -13,7 +13,7 @@
 | Performances de séance | Brouillons dans une table dédiée, migration 2→3 non destructive et lecture transactionnelle avec leurs séances. Pas de réécriture du JSON à chaque frappe. Cache du décodage des payloads inchangés. Compte à rebours isolé ; plan et progression mémorisés. |
 | Nouveau cycle | Bouton « Recommencer en semaine 1 » après huit semaines calendaires, confirmation et conservation de l’historique ; les séances non terminées du cycle doivent d’abord être reprises et terminées. |
 | CSV | Protection des débuts `= + - @`, tabulation, retour chariot et saut de ligne. Test de conservation exacte après réimport. |
-| CI | Workflow `.github/workflows/android.yml` : tests JVM et lint sur push/PR, permissions de lecture, actions officielles épinglées par SHA. Résultats et rapports dans GitHub Actions. |
+| CI | Workflow `.github/workflows/android.yml` : tests JVM et lint sur push/PR, préparation explicite du SDK, permissions de lecture et actions épinglées par SHA. Résultats et rapports dans GitHub Actions. |
 | Nettoyage | 1 332 624 354 octets d’archives d’outils extraits et d’anciens APK/AAB supprimés. Archives source des anciennes versions et référence 0.5.0 conservées. Aucun outil extrait ni donnée d’entraînement personnelle supprimé. |
 
 ## Récupération et compatibilité
