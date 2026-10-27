@@ -1,5 +1,15 @@
 # Historique des versions
 
+## 0.7.0 — 27 octobre 2026
+
+- Alarmes de repos exactes si autorisées, repli explicite, vérification de l’échéance persistée, annulation des événements obsolètes et réarmement.
+- Écran allumé configurable et mode guidé : série suivante, exercice suivant puis bilan, uniquement après validation enregistrée.
+- Mesures corporelles manuelles datées, courbes, modification et suppression ; migration Room 3→4 sans perte des séances/brouillons.
+- Rappel facultatif de fin de cycle, profil et repères de niveau personnels par exercice.
+- Vidéos YouTube personnelles par programme/exercice ; neuf liens par défaut documentés, recherche et choix personnel sur les autres fiches.
+- Cartes d’accueil réorganisables et masquables ; objectif hebdomadaire à points facultatif.
+- JSON complet format 5, anciens imports conservés, récupération brute format 4 inchangée. Feuille de route explicite dans docs/ROADMAP.md.
+
 ## 0.6.0 — 27 octobre 2026
 
 - Lecture tolérante aux lignes de séance invalides, avertissement et export JSON des données brutes de récupération.

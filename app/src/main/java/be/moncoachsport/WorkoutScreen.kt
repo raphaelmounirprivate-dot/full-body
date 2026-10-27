@@ -27,6 +27,13 @@ import androidx.navigation.compose.*
 internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
     val active = sessions.firstOrNull { it.isActive }
     val program by vm.program.collectAsStateWithLifecycle()
+    val options by vm.personal.collectAsStateWithLifecycle()
+    val view = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(view, active?.id, options.keepScreen) {
+        val previous = view.keepScreenOn
+        view.keepScreenOn = active != null && options.keepScreen
+        onDispose { view.keepScreenOn = previous }
+    }
     val timer by vm.timer.collectAsStateWithLifecycle()
     val end = timer.first
     val paused = timer.second
@@ -74,6 +81,10 @@ internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
                 }
         }
     val workoutScroll = rememberLazyListState()
+    val nextSet = remember(active, exercises) { FeatureRules.nextSet(active, exercises) }
+    LaunchedEffect(options.guided, nextSet?.first, active.id) {
+        if (options.guided) workoutScroll.scrollToItem(0)
+    }
     LaunchedEffect(active.id) { workoutScroll.scrollToItem(0) }
     LazyColumn(
         state = workoutScroll,
@@ -94,6 +105,13 @@ internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
                     )
                     SessionChooser(vm, sessions, active.program, active)
                 }
+            }
+        }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Enchaînement guidé", Modifier.weight(1f))
+                Switch(options.guided, { value -> vm.setPersonal { it.copy(guided = value) } },
+                    modifier = Modifier.semantics { contentDescription = "Enchaînement guidé" })
             }
         }
         item {
@@ -158,7 +176,7 @@ internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
             }
         }
         if (end > 0 || paused > 0) item { RestTimerCard(vm, end, paused) }
-        items(plan, key = { it.id }) { p ->
+        items(if (options.guided) plan.filter { it.id == nextSet?.first } else plan, key = { it.id }) { p ->
             val exercise = Programs.exercise(p, active, exercises)
             ExerciseLog(
                 exercise,
@@ -167,12 +185,18 @@ internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
                 sessions,
                 vm,
                 plan.indexOf(p) + 1,
-                expandedSlot == p.id,
+                options.guided || expandedSlot == p.id,
+                if (options.guided) nextSet?.second else null,
+                p.id == plan.lastOrNull { it.id !in active.skipped }?.id,
             ) {
                 expandedSlot = if (expandedSlot == p.id) null else p.id
             }
         }
-        item { Summary(vm, active) }
+        item {
+            if (options.guided && nextSet == null) Text("Toutes les séries prévues sont validées. Complétez le bilan puis terminez l’entraînement.")
+            if (!options.guided || nextSet == null) Summary(vm, active)
+            else TextButton(onClick = { vm.setPersonal { it.copy(guided = false) } }) { Text("Voir toute la séance et le bilan") }
+        }
     }
 }
 
@@ -185,6 +209,8 @@ private fun ExerciseLog(
     vm: CoachViewModel,
     position: Int,
     expanded: Boolean,
+    guidedIndex: Int?,
+    lastExercise: Boolean,
     toggle: () -> Unit,
 ) {
     val previous =
@@ -250,7 +276,7 @@ private fun ExerciseLog(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            ExerciseSheetButton(e, compact = true)
+            ExerciseSheetButton(e, compact = true, program = active.program, vm = vm)
             if (!expanded) return@Column
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(
@@ -296,11 +322,14 @@ private fun ExerciseLog(
                 Text("Exercice sauté pour cette séance.")
                 return@Column
             }
-            repeat(e.sets) { index ->
+            (if (guidedIndex == null) (0 until e.sets).toList() else listOf(guidedIndex)).forEach { index ->
                 val stored = active.sets.firstOrNull { it.exerciseId == e.id && it.index == index }
                 val last =
                     previous?.sets?.firstOrNull { it.exerciseId == e.id && it.index == index }
-                SetEditor(e, p, index, stored, last, active, sessions, vm) { vm.log(it, active.id) }
+                SetEditor(e, p, index, stored, last, active, sessions, vm,
+                    if (guidedIndex == null) null else if (index + 1 < e.sets) "Valider → série suivante"
+                    else if (lastExercise) "Valider → bilan" else "Valider → exercice suivant"
+                ) { vm.log(it, active.id) }
             }
             RestControls(p, active, vm)
         }

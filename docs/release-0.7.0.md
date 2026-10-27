@@ -1,0 +1,11 @@
+Le carnet Full Body gagne un mode guidé : après validation enregistrée, passage à la série suivante, à l’exercice suivant puis au bilan. L’écran peut rester allumé pendant la séance.
+
+Le repos précis utilise une alarme utilisateur visible dans Android, lorsque l’autorisation est accordée. Les rappels futurs sont réarmés après redémarrage ou mise à jour ; les anciens événements annulés sont ignorés. Sans autorisation de précision, le rappel utilise le mode non exact.
+
+Autres ajouts : mesures manuelles de poids et masse grasse avec courbes, rappel facultatif de fin de cycle, cartes d’accueil réorganisables, niveaux personnels et objectif hebdomadaire à points. Chaque fiche accepte un lien vidéo YouTube personnel ; neuf démonstrations du guide sont préassociées. La sélection éditoriale des dix autres reste dans la feuille de route ; une recherche n’est pas annoncée comme une vidéo validée. Les challenges de course et meilleur score restent prévus pour plus tard.
+
+**Installation :** sauvegarder en JSON, puis installer l’APK par-dessus l’ancienne version sans désinstaller. Même signature de test, Android 8 minimum. La base passe en Room v4 via une migration explicite conservant les séances et brouillons. Les nouvelles sauvegardes complètes utilisent JSON 5 ; JSON 1/2/3 et CSV 2/3 restent importables. Le CSV concerne les séances ; utiliser JSON pour les mesures et préférences nouvelles. Les sauvegardes de récupération brute restent en format 4, refusé à l’import automatique.
+
+Validation locale : 30 tests JVM, 40 tests Android et 12 tests de contenu Python. Le test Android du repos déclenche deux alarmes réelles successives avec écran éteint et veille forcée sur l’émulateur Android 11. Les tests instrumentés portent sur debug ; le lancement du paquet optimisé est vérifié séparément. Aucun test sur téléphone physique Android 13+ n’est revendiqué ; permissions et particularités constructeur restent à vérifier.
+
+Voir [le rapport](https://github.com/raphaelmounirprivate-dot/full-body/blob/main/docs/validation-0.7.0.md) et [la feuille de route](https://github.com/raphaelmounirprivate-dot/full-body/blob/main/docs/ROADMAP.md). Aucune nouvelle dépendance, aucun compte, aucune télémétrie ni permission Internet dans l’application. YouTube s’ouvre à l’extérieur.

@@ -24,6 +24,7 @@ internal fun SetEditor(
     active: Training,
     sessions: List<Training>,
     vm: CoachViewModel,
+    actionLabel: String? = null,
     save: (LoggedSet) -> Unit,
 ) {
     val key = "${e.id}-$index"
@@ -266,7 +267,7 @@ internal fun SetEditor(
     ) {
         Icon(Icons.Outlined.Check, null)
         Spacer(Modifier.width(8.dp))
-        Text(if (stored == null) "Valider la série" else "Enregistrer la correction")
+        Text(actionLabel ?: if (stored == null) "Valider la série" else "Enregistrer la correction")
     }
     if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
     HorizontalDivider()

@@ -6,6 +6,10 @@ Construire une application Android personnelle en français pour suivre un progr
 
 ## Architecture
 
+Version 0.7 : `FeatureRules.kt` porte le choix de la prochaine série, les validations des mesures/liens/options et le comptage hebdomadaire. `PersonalData.kt` porte la table Room des mesures et le codec des préférences complémentaires. `PersonalPanels.kt` et `ExerciseVideo.kt` présentent ces fonctions. Aucune nouvelle dépendance ni permission Internet.
+
+Room v4 ajoute uniquement la table des mesures via 3→4. Le JSON normal passe en version 5 pour éviter qu’un ancien APK ignore ces données lors d’une restauration. Les anciens JSON 1/2/3 et CSV 2/3 restent importables ; l’absence des nouveaux champs dans une ancienne sauvegarde conserve les données personnelles existantes. Le CSV conserve sa portée historique des séances. Voir [la feuille de route](ROADMAP.md) et [la validation 0.7](validation-0.7.0.md).
+
 - Interface : Kotlin et Jetpack Compose Material 3, navigation entre accueil, séance, progression et exercices.
 - État : ViewModel, coroutines et Flow ; logique métier séparée des écrans.
 - Règles : `Domain.kt` porte les données et les validations simples ; `Programs.canIncrease` est l’unique règle de progression utilisée et testée.

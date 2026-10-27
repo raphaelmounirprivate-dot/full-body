@@ -54,7 +54,7 @@ class MaintenanceTest {
         val raw = "{future-version\nnot-readable"
         val db =
             Room.databaseBuilder(context, SportDatabase::class.java, "sport.db")
-                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3)
+                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3, SportDatabase.MIGRATION_3_4)
                 .build()
         db.sessions().put(SessionRecord("bad", raw))
         db.sessions().put(SessionRecord("good", Codec.encode(Training("good", "A", 1000))))
@@ -109,7 +109,7 @@ class MaintenanceTest {
         }
         val db =
             Room.databaseBuilder(context, SportDatabase::class.java, name)
-                .addMigrations(SportDatabase.MIGRATION_2_3)
+                .addMigrations(SportDatabase.MIGRATION_2_3, SportDatabase.MIGRATION_3_4)
                 .build()
         val repo = SportRepository(context, db)
         try {

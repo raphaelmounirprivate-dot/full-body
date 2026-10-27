@@ -247,7 +247,7 @@ class StorageTest {
         }
         val migrated =
             Room.databaseBuilder(context, SportDatabase::class.java, name)
-                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3)
+                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3, SportDatabase.MIGRATION_3_4)
                 .build()
         try {
             assertEquals(
@@ -362,9 +362,15 @@ class StorageTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val scheduler = RestScheduler(context)
         val manager = context.getSystemService(android.app.NotificationManager::class.java)
-        scheduler.update(System.currentTimeMillis() + 60000, true)
+        val end = System.currentTimeMillis() - 1
+        val repo = SportRepository(context)
+        val previousAlerts = repo.alerts.first()
+        val previousTimer = repo.timer.first()
+        repo.setAlerts(true)
+        repo.setTimer(end,0)
+        scheduler.update(end, true)
         try {
-            RestReceiver().onReceive(context, android.content.Intent())
+            RestReceiver().onReceive(context, android.content.Intent().putExtra("id",42).putExtra("end",end))
             repeat(30) {
                 if (manager.activeNotifications.none { it.id == 42 }) kotlinx.coroutines.delay(50)
             }
@@ -372,6 +378,9 @@ class StorageTest {
         } finally {
             scheduler.update(0, false)
             manager.cancel(42)
+            repo.setAlerts(previousAlerts)
+            repo.setTimer(previousTimer.first,previousTimer.second)
+            repo.close()
         }
     }
 }

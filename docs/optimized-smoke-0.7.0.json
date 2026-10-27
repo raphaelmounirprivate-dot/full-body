@@ -1,0 +1,14 @@
+{
+  "version": "0.7.0",
+  "versionCode": 9,
+  "optimizedApkSha256": "e4111080d517664e29c019dfa9950ef4ab379a0a44dd1ef062aef3d3f0088716",
+  "bytes": 6753800,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedOverExistingApp": true,
+  "guidedSwitchAndNextSetVisible": true,
+  "bodyMeasurementDialogVisible": true,
+  "existingActivityReusedForReminder": true,
+  "installedApkHashMatchesArtifact": true,
+  "noFatalExceptionInProcessLog": true,
+  "smokePassed": true
+}

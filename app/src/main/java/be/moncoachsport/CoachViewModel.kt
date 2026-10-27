@@ -74,6 +74,27 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     val reviews = repository.reviews.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val autoRest = repository.autoRest.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val haptics = repository.haptics.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val personal = repository.personal.stateIn(viewModelScope, SharingStarted.Eagerly, PersonalOptions())
+    val measurements = repository.measurements.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    fun setPersonal(change: (PersonalOptions) -> PersonalOptions) = action {
+        repository.setPersonal(change(repository.personal.first()))
+    }
+    fun saveMeasurement(day: String, kg: String, fat: String) = action {
+        fun number(value: String): Double? {
+            if (value.isBlank()) return null
+            return value.replace(',', '.').toDoubleOrNull()
+                ?: throw IllegalArgumentException("Mesure : saisissez un nombre")
+        }
+        repository.saveMeasurement(BodyMeasurement(day, number(kg), number(fat)))
+        message.value = "Mesure enregistrée"
+    }
+    fun deleteMeasurement(day: String) = action { repository.deleteMeasurement(day) }
+    fun setVideo(program: String, id: String, url: String) = setPersonal { options ->
+        val key = (if (program == Programs.CYCLE) "cycle" else "legacy") + ":" + id
+        options.copy(videos = options.videos.toMutableMap().apply {
+            if (url.isBlank()) remove(key) else put(key, url.trim())
+        })
+    }
 
     fun setAutoRest(value: Boolean) = action { repository.setAutoRest(value) }
 
@@ -123,8 +144,15 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             repository.preferCurrentGuide()
             repository.currentSessions()
+            scheduler.update(repository.timer.first().first, repository.alerts.first())
             ready.value = true
         }
+        viewModelScope.launch {
+            combine(repository.cycleStart, repository.personal, repository.alerts) { start, options, alerts ->
+                Triple(start, options.cycleReminder, alerts)
+            }.collect { (start, enabled, alerts) -> scheduler.cycle(start, enabled && alerts) }
+        }
+        scheduler.reconcile()
     }
 
     val active
@@ -346,13 +374,16 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     fun eraseAll() = action {
         repository.eraseAll()
         scheduler.update(0, false)
+        scheduler.cycle(0, false)
         message.value = "Toutes les données et préférences ont été supprimées"
     }
 
     suspend fun exportJson(): String {
         val snapshot = repository.snapshotNow()
         return JSONObject()
-            .put("version", if (snapshot.unreadable.isEmpty()) 3 else 4)
+            .put("version", if (snapshot.unreadable.isEmpty()) 5 else 4)
+            .put("personal", PersonalCodec.encode(repository.personal.first()))
+            .put("measurements", PersonalCodec.measurements(repository.readMeasurements()))
             .put(
                 "sessions",
                 JSONArray().apply {
@@ -444,6 +475,7 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         repository.setTimer(0, 0)
         scheduler.update(0, false)
         message.value = "Sauvegarde restaurée"
+        scheduler.cycle(repository.cycleStart.first(), repository.personal.first().cycleReminder && repository.alerts.first())
     }
 
     fun restartCycle() = action {

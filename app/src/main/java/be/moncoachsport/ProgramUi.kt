@@ -29,6 +29,7 @@ fun CoachHome(
 ) {
     val program by vm.program.collectAsStateWithLifecycle()
     val cycleStart by vm.cycleStart.collectAsStateWithLifecycle()
+    val options by vm.personal.collectAsStateWithLifecycle()
     val active = sessions.firstOrNull { it.isActive }
     val completed = sessions.filter { it.finished != null }
     val currentWeek =
@@ -98,13 +99,14 @@ fun CoachHome(
                 }
             }
         }
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("${completed.size} séances")
-                Text("${completed.sumOf { it.cardio }} min cardio")
-            }
-        }
-        item {
+        options.homeOrder.filter { it !in options.hidden }.forEach { card ->
+            item(key = "home-$card") {
+                when (card) {
+                    "stats" -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("${completed.size} séances")
+                        Text("${completed.sumOf { it.cardio }} min cardio")
+                    }
+                    "shortcuts" ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = onExercises,
@@ -121,7 +123,16 @@ fun CoachHome(
                     Text("Ma progression")
                 }
             }
+                    "last" -> Panel("Dernier entraînement") {
+                        Text(completed.maxByOrNull { it.finished!! }?.let {
+                            "Séance ${it.template} · ${date(it.finished!!)}\n${Programs.title(it.program)} · ${it.sets.size} séries"
+                        } ?: "Votre historique commencera après votre première séance.")
+                    }
+                    "challenge" -> ChallengeCard(vm, sessions)
+                }
+            }
         }
+        item { HomeCardSettings(vm) }
         item { ProgramSelector(vm, program, cycleStart) }
         item { GuideSafety(vm.guideSections) }
         if (program == Programs.CYCLE) item { PhaseCard(currentWeek) }
@@ -130,17 +141,6 @@ fun CoachHome(
                 WarmupText(active?.program ?: program)
                 Text(
                     "Laissez au moins un jour sans musculation entre deux séances. L’échauffement ne compte pas dans les séries de travail."
-                )
-            }
-        }
-        item {
-            Panel("Dernier entraînement") {
-                Text(
-                    completed
-                        .maxByOrNull { it.finished!! }
-                        ?.let {
-                            "Séance ${it.template} · ${date(it.started)}\n${Programs.title(it.program)} · ${it.sets.size} séries"
-                        } ?: "Votre historique commencera après votre première séance."
                 )
             }
         }
@@ -155,6 +155,7 @@ fun CoachHome(
             TextButton(onClick = { vm.toggleTheme() }) { Text("Changer le thème clair / sombre") }
         }
         item { TrainingSettings(vm) }
+        item { WorkoutSettings(vm) }
         item { AlertSettings(vm) }
         item { GuideExportButton() }
     }

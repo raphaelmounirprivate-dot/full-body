@@ -94,11 +94,12 @@ interface ReviewDao {
 }
 
 @Database(
-    entities = [SessionRecord::class, WeeklyReview::class, DraftRecord::class],
-    version = 3,
+    entities = [SessionRecord::class, WeeklyReview::class, DraftRecord::class, BodyMeasurement::class],
+    version = 4,
     exportSchema = false,
 )
 abstract class SportDatabase : RoomDatabase() {
+    abstract fun measurements(): MeasurementDao
     abstract fun sessions(): SessionDao
 
     abstract fun reviews(): ReviewDao
@@ -106,6 +107,11 @@ abstract class SportDatabase : RoomDatabase() {
     abstract fun drafts(): DraftDao
 
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS body_measurements (day TEXT NOT NULL PRIMARY KEY, kg REAL, fat REAL)")
+            }
+        }
         val MIGRATION_2_3 =
             object : Migration(2, 3) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -314,9 +320,24 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
                     SportDatabase::class.java,
                     "sport.db",
                 )
-                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3)
+                .addMigrations(SportDatabase.MIGRATION_1_2, SportDatabase.MIGRATION_2_3, SportDatabase.MIGRATION_3_4)
                 .build()
     private val prefs = context.applicationContext.preferences
+    val measurements = db.measurements().observe()
+    suspend fun readMeasurements() = db.measurements().read()
+    suspend fun saveMeasurement(value: BodyMeasurement) {
+        FeatureRules.validate(value)
+        require(db.measurements().read().let { rows -> rows.size < 10000 || rows.any { it.day == value.day } }) { "Limite de 10 000 mesures atteinte" }
+        db.measurements().put(value)
+    }
+    suspend fun deleteMeasurement(day: String) = db.measurements().delete(day)
+    val personal = prefs.data.map {
+        it[stringPreferencesKey("personal")]?.let { raw -> PersonalCodec.decode(JSONObject(raw)) } ?: PersonalOptions()
+    }
+    suspend fun setPersonal(value: PersonalOptions) {
+        FeatureRules.validate(value)
+        prefs.edit { it[stringPreferencesKey("personal")] = PersonalCodec.encode(value).toString() }
+    }
     private val decoder = SessionRowDecoder()
     val snapshots = db.sessions().observeWithDrafts().map { rows ->
         decoder.readAll(rows.map { it.session }, rows.flatMap { it.drafts })
@@ -442,6 +463,7 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
 
     suspend fun eraseAll() {
         erase()
+        db.measurements().clear()
         prefs.edit { it.clear() }
     }
 
@@ -463,7 +485,10 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
         require(!j.has("recovery")) {
             "Cette sauvegarde contient des lignes illisibles à récupérer. Aucune donnée n'a été remplacée."
         }
-        require(j.getInt("version") in 1..3) { "Version inconnue" }
+        require(j.getInt("version") in listOf(1, 2, 3, 5)) { "Version inconnue" }
+        val personal = if (j.has("personal")) PersonalCodec.decode(j.getJSONObject("personal")) else null
+        val measurements = if (j.has("measurements")) PersonalCodec.measurements(j.getJSONArray("measurements")) else null
+        require(j.getInt("version") == 5 || (personal == null && measurements == null)) { "Les données personnelles nécessitent le format 5" }
         val a = j.getJSONArray("sessions")
         require(a.length() <= 10000) { "La sauvegarde dépasse la limite de 10 000 séances" }
         val data = (0 until a.length()).map { Codec.decode(a.getJSONObject(it).toString()) }
@@ -531,7 +556,12 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
             db.drafts().clear()
             db.reviews().clear()
             reviews.forEach { db.reviews().put(it) }
+            if (measurements != null) {
+                db.measurements().clear()
+                measurements.forEach { db.measurements().put(it) }
+            }
         }
+        if (personal != null) setPersonal(personal.copy(cycleReminder = false))
         if (preferences != null)
             prefs.edit {
                 it[stringPreferencesKey("program")] = importedProgram

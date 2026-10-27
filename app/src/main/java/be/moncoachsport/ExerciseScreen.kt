@@ -25,7 +25,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.compose.*
 
 @Composable
-internal fun ExerciseSheetButton(e: Exercise, compact: Boolean = false) {
+internal fun ExerciseSheetButton(e: Exercise, compact: Boolean = false, program: String = Programs.CYCLE, vm: CoachViewModel? = null) {
     var open by rememberSaveable(e.id) { mutableStateOf(false) }
     if (compact)
         TextButton(
@@ -63,6 +63,7 @@ internal fun ExerciseSheetButton(e: Exercise, compact: Boolean = false) {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     ExerciseDetails(e)
+                    if (vm != null) ExerciseVideo(e, program, vm)
                 }
             },
             confirmButton = { TextButton(onClick = { open = false }) { Text("Fermer la fiche") } },
@@ -121,7 +122,7 @@ private fun ExerciseDetails(e: Exercise) {
 }
 
 @Composable
-internal fun Catalogue(exercises: List<Exercise>, program: String) {
+internal fun Catalogue(exercises: List<Exercise>, program: String, vm: CoachViewModel? = null) {
     var query by rememberSaveable { mutableStateOf("") }
     var group by rememberSaveable { mutableStateOf("Tous") }
     val groups =
@@ -201,7 +202,7 @@ internal fun Catalogue(exercises: List<Exercise>, program: String) {
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        ExerciseSheetButton(e, compact = true)
+                        ExerciseSheetButton(e, compact = true, program = program, vm = vm)
                     }
                 }
             }

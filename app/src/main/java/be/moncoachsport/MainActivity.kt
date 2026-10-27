@@ -15,18 +15,26 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 
 class MainActivity : ComponentActivity() {
+    private var workoutRequest by mutableIntStateOf(0)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { CoachApp() }
+        if (intent.getBooleanExtra("openWorkout", false)) workoutRequest++
+        setContent { CoachApp(workoutRequest = workoutRequest) }
+    }
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra("openWorkout", false)) workoutRequest++
     }
 }
 
 @Composable
-fun CoachApp(vm: CoachViewModel = viewModel()) {
+fun CoachApp(vm: CoachViewModel = viewModel(), workoutRequest: Int = 0) {
     val dark by vm.dark.collectAsStateWithLifecycle()
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
     val nav = rememberNavController()
+    LaunchedEffect(workoutRequest) { if (workoutRequest > 0) nav.navigate("Séance") { launchSingleTop = true } }
     val back by nav.currentBackStackEntryAsState()
     val tabs = listOf("Accueil", "Séance", "Progression", "Exercices")
     val icons =
@@ -85,7 +93,7 @@ fun CoachApp(vm: CoachViewModel = viewModel()) {
                 composable("Progression") { Progress(vm, sessions) }
                 composable("Exercices") {
                     val program by vm.program.collectAsStateWithLifecycle()
-                    Catalogue(vm.exercisesFor(program), program)
+                    Catalogue(vm.exercisesFor(program), program, vm)
                 }
             }
         }

@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.6.0
+# Mon Coach Sport — Android 0.7.0
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -10,19 +10,28 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK optimisé 0.6.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.6.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
+Pour tester l’application : [télécharger l’APK optimisé 0.7.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.7.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
 
 | Accueil | Séance | Fiche d’exercice |
 | --- | --- | --- |
 | ![Accueil](docs/screenshots/accueil.png) | ![Séance](docs/screenshots/seance.png) | ![Fiche](docs/screenshots/fiche.png) |
 
-Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png), [l’aperçu compact de la séance](docs/screenshots/seance-apercu.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). Validation de cette version : [résultats 0.6.0](docs/validation-0.6.0.md).
+Les captures ci-dessus illustrent les versions précédentes. Voir aussi [le choix A/B/C](docs/screenshots/choisir-seance.png) et [la séance en grande police](docs/screenshots/seance-grande-police.png). État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation : [résultats 0.7.0](docs/validation-0.7.0.md).
 
 ## Développement
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
 
 ## Fonctionnalités
+
+- Rappel de repos précis si autorisé dans Android, repli non exact sinon ; événements annulés ou périmés ignorés, réarmement des échéances futures après redémarrage et mise à jour. Activer « Notification et vibration », puis « Autoriser les rappels précis » si proposé.
+- Écran maintenu allumé pendant une séance active, réglable depuis « Confort pendant la séance ». Le verrouillage manuel reste possible.
+- Option « Enchaînement guidé » sur l’écran de séance : prochaine série après validation enregistrée, exercice suivant puis bilan. Le mode complet reste accessible pour corriger ou terminer plus tôt.
+- Poids et masse grasse : « Progression » → « Mes mesures et mes courbes ». Une mesure par date, modifiable ; valeurs manuelles, facultatives, courbes et historique.
+- Rappel facultatif de fin du cycle ; niveau de profil et repère personnel par exercice, sans transformation du guide.
+- Lien YouTube personnel pour chaque fiche, distinct selon le programme. Neuf démonstrations par défaut sont documentées dans [les sources vidéo](docs/video-sources.md) ; les autres fiches proposent une recherche explicitement nommée. YouTube s’ouvre à l’extérieur et nécessite Internet.
+- « Organiser mon accueil » permet de déplacer ou masquer les cartes statistiques, raccourcis, dernier entraînement et objectif.
+- Objectif hebdomadaire à points facultatif : 10 points par séance terminée, sans classement ni récompense liée aux charges. Les challenges de course et meilleur score restent dans la feuille de route.
 
 - Une séance locale illisible est mise de côté et signalée sans bloquer les autres. L’export JSON conserve également les lignes brutes pour permettre leur récupération ; elles ne sont jamais supprimées automatiquement.
 - Les brouillons sont enregistrés champ par champ ; les lignes d’historique inchangées ne sont pas redécodées. Le minuteur dispose de son propre composant d’affichage.
@@ -60,15 +69,15 @@ Contrôle : `python scripts/verify_guide.py`. Réimport : `python scripts/import
 
 ## Conservation et sauvegardes
 
-Room v3 conserve la migration 1→2 des bilans et ajoute une migration explicite 2→3 pour les champs de brouillon. Les brouillons déjà présents dans les anciens JSON restent lus ; aucune séance n’est réinterprétée. Les anciens JSON sans identifiant de programme restent associés au programme initial. Aucun effacement destructif automatique.
+Room v4 conserve les migrations 1→2 et 2→3 et ajoute 3→4 pour les mesures corporelles. Les brouillons déjà présents dans les anciens JSON restent lus ; aucune séance n’est réinterprétée. Les anciens JSON sans identifiant de programme restent associés au programme initial. Aucun effacement destructif automatique.
 
-Écritures asynchrones : les dernières frappes peuvent être perdues si l’arrêt intervient pendant une écriture. Le minuteur conserve son échéance ; Android peut retarder les notifications en veille. Alarme non exacte, non réinstallée après redémarrage complet du téléphone.
+Écritures asynchrones : les dernières frappes peuvent être perdues si l’arrêt intervient pendant une écriture. Le minuteur conserve son échéance. Les alarmes exactes nécessitent l’autorisation Android correspondante à partir d’Android 12 ; sans elle, le rappel peut être retardé. Le repos précis utilise une alarme utilisateur visible dans Android pour éviter la limitation des alarmes ordinaires rapprochées en veille. Les échéances futures sont réarmées au redémarrage ; un repos déjà expiré n’est pas rejoué. Un arrêt forcé de l’application et les restrictions du constructeur peuvent empêcher les rappels.
 
-- JSON format 3 : séances actives et en pause, bilans, date de départ, programme et préférences d’interface. JSON formats 1 et 2 acceptés. Autorisation de notification liée au téléphone.
+- JSON format 5 : séances, bilans, préférences, mesures corporelles, organisation, niveaux et liens vidéo personnels. JSON formats 1, 2 et 3 acceptés. Une ancienne sauvegarde conserve les mesures/options nouvelles déjà présentes ; les autorisations restent propres au téléphone et le rappel de cycle n’est pas réactivé par restauration.
 - En présence de lignes illisibles, l’export JSON utilise un format de récupération 4 et ajoute un bloc `recovery` avec les lignes et les brouillons bruts. Ce fichier doit être examiné et réparé avant import ; un import automatique est refusé sans remplacer les données locales. Le numéro 4 empêche aussi les anciens APK d’ignorer silencieusement ces lignes. Le CSV ne contient que les séances lisibles.
-- CSV format 3 : historique restaurable avec colonnes lisibles et état JSON conservant options, pauses et brouillons. Les anciens exports au format 2 (application v0.2 et suivantes) restent importables. Validation des guillemets, séparateurs, retours à la ligne, unités et cohérence. L’import conserve les bilans/préférences actuels.
+- CSV format 3 : historique des séances restaurable, sans mesures corporelles ni nouvelles préférences. Utiliser JSON 5 pour une sauvegarde complète. Les anciens exports CSV 2 restent importables ; l’import CSV conserve les mesures et préférences actuelles.
 - Les CSV de consultation v0.1 et d’autres applications sont refusés car leur schéma diffère.
-- Confirmation et validation complète avant remplacement transactionnel dans Room. Une seule séance active ; au plus une séance non terminée par programme et type A/B/C. Les séances en pause ne sont pas comptées comme terminées. Les versions antérieures à 0.5 ne peuvent pas restaurer les sauvegardes au format 3. Une base Room v3 ne peut pas être ouverte directement avec un ancien APK Room v2.
+- Confirmation et validation complète avant remplacement transactionnel dans Room. Une seule séance active ; au plus une séance non terminée par programme et type A/B/C. Les séances en pause ne sont pas comptées comme terminées. Les anciens APK ne peuvent pas ouvrir directement une base Room v4 ni restaurer le JSON 5.
 
 ## Compiler et tester
 
@@ -84,13 +93,13 @@ Ouvrir dans Android Studio avec SDK Platform 36, Build Tools requis par AGP et J
 
 **Utiliser un émulateur de test : les tests effacent les données de cette application sur l’appareil choisi.** Le lanceur Gradle UTP échoue dans cet environnement Windows sandboxé ; exécution directe avec `adb shell am instrument -w`.
 
-APK debug : `app/build/outputs/apk/debug/app-debug.apk` (environ 16,7 Mo). APK optimisé non signé : `app/build/outputs/apk/release/app-release-unsigned.apk` (environ 6,7 Mo). R8 et la réduction des ressources sont activés pour release. AAB non signé : `app/build/outputs/bundle/release/app-release.aab`. L’APK optimisé téléchargeable est signé localement avec la clé de test déjà utilisée ; cette clé reste hors du dépôt. Une signature de distribution finale doit être fournie par le propriétaire.
+APK debug : `app/build/outputs/apk/debug/app-debug.apk` (environ 16,8 Mo). APK optimisé non signé : `app/build/outputs/apk/release/app-release-unsigned.apk` (environ 6,8 Mo). R8 et la réduction des ressources sont activés pour release. AAB non signé : `app/build/outputs/bundle/release/app-release.aab`. L’APK optimisé téléchargeable est signé localement avec la clé de test déjà utilisée ; cette clé reste hors du dépôt. Une signature de distribution finale doit être fournie par le propriétaire.
 
 Installer l’APK par-dessus la précédente avec `adb install -r` pour conserver les données et exécuter la migration ; ne pas désinstaller l’ancienne application.
 
 Livrables : `output/`, avec empreintes SHA-256. L’archive source inclut code, tests, documents et captures, sans outils/caches. Livrables précédents dans `output/v0.1.0/`.
 
-Preuves : `docs/validation-0.6.0.md` et `docs/test-results/`. La [CI Android](https://github.com/raphaelmounirprivate-dot/full-body/actions/workflows/android.yml) lance les tests JVM et lint à chaque push et pull request ; les tests sur émulateur restent exécutés localement. Tests de contenu : `python scripts/verify_content.py` et `python scripts/verify_guide.py`. Réimport du guide : `python scripts/import_guide.py`, puis `python scripts/optimize_assets.py` pour préparer les copies mobiles. `python scripts/verify_rendered_assets.py` compare le rendu des 39 pages. L’importateur `scripts/import_programme.py` est réservé à l’archive historique de 8 pages. Dépendances : pypdf, pypdfium2 et Pillow. Aucun remplacement de source nécessaire pour compiler.
+Preuves : `docs/validation-0.7.0.md` et `docs/test-results/`. La [CI Android](https://github.com/raphaelmounirprivate-dot/full-body/actions/workflows/android.yml) lance les tests JVM et lint à chaque push et pull request ; les tests sur émulateur restent exécutés localement. Tests de contenu : `python scripts/verify_content.py` et `python scripts/verify_guide.py`. Réimport du guide : `python scripts/import_guide.py`, puis `python scripts/optimize_assets.py` pour préparer les copies mobiles. `python scripts/verify_rendered_assets.py` compare le rendu des 39 pages. L’importateur `scripts/import_programme.py` est réservé à l’archive historique de 8 pages. Dépendances : pypdf, pypdfium2 et Pillow. Aucun remplacement de source nécessaire pour compiler.
 
 Nettoyage : `python scripts/cleanup_artifacts.py` propose une simulation ; ajouter `--apply` pour retirer uniquement les archives d’outils déjà extraits et les anciens APK/AAB listés. Les sources des versions anciennes et les livrables 0.5.0 de retour arrière sont conservés. Rapport : `docs/local-cleanup.json`.
 

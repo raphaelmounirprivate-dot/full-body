@@ -18,11 +18,30 @@ import androidx.navigation.compose.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 @Composable
 fun AlertSettings(vm: CoachViewModel) {
     val context = LocalContext.current
     val enabled by vm.alerts.collectAsStateWithLifecycle()
+    val options by vm.personal.collectAsStateWithLifecycle()
+    var precise by remember { mutableStateOf(RestScheduler(context).preciseAllowed()) }
+    val lifecycle = LocalLifecycleOwner.current
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                precise = RestScheduler(context).preciseAllowed()
+                RestScheduler(context).reconcile()
+            }
+        }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose { lifecycle.lifecycle.removeObserver(observer) }
+    }
     val request =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             vm.setAlerts(granted)
@@ -48,9 +67,50 @@ fun AlertSettings(vm: CoachViewModel) {
             )
         }
         Text(
-            "Android peut retarder le rappel en veille. La vibration se règle aussi dans les paramètres de notification du téléphone.",
+            if (precise) "Rappels précis autorisés. Le prochain repos apparaît parmi les alarmes Android. Son et vibration se règlent aussi dans les paramètres Android."
+            else "Sans autorisation de rappel précis, Android peut retarder la notification en veille.",
             style = MaterialTheme.typography.bodySmall,
         )
+        if (!precise && Build.VERSION.SDK_INT >= 31) OutlinedButton(onClick = {
+            runCatching {
+                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    android.net.Uri.parse("package:" + context.packageName)))
+            }.onFailure { vm.message.value = "Ouvrez les paramètres Android > Applications > Accès spécial > Alarmes et rappels." }
+        }) { Text("Autoriser les rappels précis") }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Rappel de fin de cycle", Modifier.weight(1f))
+            Switch(options.cycleReminder, { value -> vm.setPersonal { it.copy(cycleReminder = value) } },
+                modifier=Modifier.semantics { contentDescription="Rappel de fin de cycle" })
+        }
+        if (options.cycleReminder && !enabled) Text("Activez aussi les notifications ci-dessus.")
+    }
+}
+
+@Composable
+fun WorkoutSettings(vm: CoachViewModel) {
+    val options by vm.personal.collectAsStateWithLifecycle()
+    Panel("Confort pendant la séance") {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Garder l’écran allumé", Modifier.weight(1f))
+            Switch(options.keepScreen, { value -> vm.setPersonal { it.copy(keepScreen = value) } },
+                modifier=Modifier.semantics { contentDescription="Garder l’écran allumé" })
+        }
+        Text("Uniquement sur l’écran de séance avec un entraînement actif. Le verrouillage manuel reste possible.")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Enchaînement guidé", Modifier.weight(1f))
+            Switch(options.guided, { value -> vm.setPersonal { it.copy(guided = value) } },
+                modifier=Modifier.semantics { contentDescription="Enchaînement guidé" })
+        }
+        Text("Après validation réussie : prochaine série, exercice suivant puis bilan. Le repos reste disponible.")
+        Text("Mon niveau (indicatif)")
+        FeatureRules.levels.forEach { level ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(options.level == level, { vm.setPersonal { it.copy(level = level) } },
+                    modifier=Modifier.semantics { contentDescription="Mon niveau : $level" })
+                Text(level)
+            }
+        }
+        Text("Ce choix ne modifie ni les séries ni les charges du guide.")
     }
 }
 

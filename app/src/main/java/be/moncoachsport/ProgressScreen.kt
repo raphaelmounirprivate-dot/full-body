@@ -84,6 +84,8 @@ internal fun Progress(vm: CoachViewModel, sessions: List<Training>) {
             }
         }
         item { WeeklyReviewPanel(vm) }
+        item { BodyPanel(vm) }
+        item { ChallengeCard(vm, sessions) }
         if (complete.isEmpty())
             item { Text("Vos résultats apparaîtront ici après une séance terminée.") }
         items(complete.reversed(), key = { it.id }) { t ->

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="be.moncoachsport.RulesTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-27T12:53:34.840Z" hostname="DESKTOP-N5ECKPI" time="0.001">
+  <properties/>
+  <testcase name="invalidNumbersRejected" classname="be.moncoachsport.RulesTest" time="0.001"/>
+  <testcase name="unstartedCycleNeverOffersRestart" classname="be.moncoachsport.RulesTest" time="0.0"/>
+  <testcase name="rotationCyclesOnlyWithCompletedCount" classname="be.moncoachsport.RulesTest" time="0.0"/>
+  <testcase name="newCycleBecomesAvailableAfterEightCalendarWeeks" classname="be.moncoachsport.RulesTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
