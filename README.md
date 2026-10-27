@@ -10,7 +10,7 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK optimisé 0.8.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont privés ; aucune signature de distribution commerciale n’est fournie.
+Pour tester l’application : [télécharger l’APK optimisé 0.8.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont publics ; aucune signature de distribution commerciale n’est fournie.
 
 | Accueil | Séance et repos | Fiche d’exercice |
 | --- | --- | --- |
