@@ -31,6 +31,13 @@ Les premiers passages de la suite Android ont révélé des attentes insuffisant
 
 ## Limites
 
-Les tests Android utilisent uniquement l’émulateur dédié **Sport_QA, Android 11 / API 30**. Aucun essai sur téléphone physique Android 13+ ni validation individuelle des gestes, douleurs ou machines du club. L’APK optimisé utilise la clé de test existante, pas une clé de distribution commerciale. Aucun nouveau tag ni téléchargement GitHub 0.8.1 n’a été publié lors de cette adaptation locale.
+Les tests Android utilisent uniquement l’émulateur dédié **Sport_QA, Android 11 / API 30**. Aucun essai sur téléphone physique Android 13+ ni validation individuelle des gestes, douleurs ou machines du club. L’APK optimisé utilise la clé de test existante, pas une clé de distribution commerciale.
 
 Room v4, JSON complet v5 et CSV v3 sont conservés. Une préférence facultative est ajoutée au JSON personnel ; les variantes réalisées restent stockées dans chaque séance. Les règles et mesures corporelles antérieures restent en place.
+
+## Publication du 28 octobre 2026
+
+- [Préversion GitHub v0.8.1](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.1), APK et fichier SHA256SUMS publics.
+- Code applicatif : commit `a7676052016116e7ffb8c1742fe250e9b906326f` ; [CI JVM/lint réussie](https://github.com/raphaelmounirprivate-dot/full-body/actions/runs/40655249081).
+- APK local nommé `output/v0.8.1/Mon-Coach-Sport-0.8.1.apk`, identique au paquet optimisé testé.
+- Téléchargement réel sans authentification vérifié : 6 790 832 octets, SHA-256 identique au fichier local et à l’empreinte serveur GitHub. [Preuve de publication](github-publication-0.8.1.json).

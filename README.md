@@ -10,7 +10,7 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK optimisé 0.8.0 dans les versions GitHub](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.0). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont publics ; aucune signature de distribution commerciale n’est fournie.
+Pour tester l’application : [télécharger l’APK optimisé 0.8.1](https://github.com/raphaelmounirprivate-dot/full-body/releases/download/v0.8.1/Mon-Coach-Sport-0.8.1.apk) · [notes de version](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.1). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont publics ; aucune signature de distribution commerciale n’est fournie.
 
 | Accueil | Séance et repos | Fiche d’exercice |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ Captures de l’APK optimisé 0.8.0 sur l’émulateur Android 11, avec des donn
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
 
-Le code 0.8.1 ajoute **Accueil → Adapter mes prochaines séances** : variantes déjà présentes dans le guide, après apprentissage, avec priorité aux machines et poulies. Il affiche aussi le travail réellement effectué sur sept jours et demande un bilan avant une troisième série. Les séances en pause et l’historique gardent leurs paramètres. [Analyse du programme et sources](docs/programme-adapte.md) · [validation locale 0.8.1](docs/validation-0.8.1.md). Le téléchargement GitHub ci-dessus reste la version publiée 0.8.0.
+La version 0.8.1 ajoute **Accueil → Adapter mes prochaines séances** : variantes déjà présentes dans le guide, après apprentissage, avec priorité aux machines et poulies. Elle affiche aussi le travail réellement effectué sur sept jours et demande un bilan avant une troisième série. Les séances en pause et l’historique gardent leurs paramètres. [Analyse du programme et sources](docs/programme-adapte.md) · [validation 0.8.1 et publication vérifiée](docs/validation-0.8.1.md).
 
 ## Fonctionnalités
 

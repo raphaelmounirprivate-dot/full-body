@@ -1,11 +1,12 @@
 # Suivi des fonctionnalités
 
-État du développement 0.8.0, vérifié le 27 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
+État du développement 0.8.1, vérifié le 28 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
 
 ## Priorité séance
 
 ### Adaptations 0.8.1 — 28 octobre 2026
 
+- [x] APK 0.8.1 disponible en local et en préversion GitHub publique ; téléchargement et SHA-256 vérifiés.
 - [x] Analyse du programme pour remise en forme trois fois par semaine, puis prise de muscle ; sources et limites dans [programme-adapte.md](programme-adapte.md).
 - [x] Choix explicites des variantes existantes A/F19, B/F10 et C/F16 après apprentissage, avec aperçu et application aux nouvelles séances uniquement.
 - [x] Bilan des séances, séries directes validées et cardio en salle sur sept jours glissants du cycle courant ; avertissement si historique incomplet.

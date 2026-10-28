@@ -1,0 +1,11 @@
+{
+  "release": "https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.1",
+  "download": "https://github.com/raphaelmounirprivate-dot/full-body/releases/download/v0.8.1/Mon-Coach-Sport-0.8.1.apk",
+  "sourceCommit": "a7676052016116e7ffb8c1742fe250e9b906326f",
+  "ci": "https://github.com/raphaelmounirprivate-dot/full-body/actions/runs/40655249081",
+  "sha256": "69a53dac6b0690c7915d551ac03fc0641a3f5e1ac151cdd5f149e08422f97821",
+  "bytes": 6790832,
+  "publicDownloadVerified": true,
+  "sameTestCertificate": "040f1fd30560381354cac6610cc36828fbf6b4b7e255759cbb5c5aa179ad3a68",
+  "prerelease": true
+}
