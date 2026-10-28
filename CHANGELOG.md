@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 0.8.1 — Adaptations machines et poulies (28 octobre 2026)
+
+- Choix explicites des variantes existantes de poussée et de tronc pour les prochaines nouvelles séances ; anciennes séances conservées.
+- Bilan réel des sept derniers jours du cycle et confirmation de maîtrise/récupération avant une troisième série.
+- Correction de la comparaison de progression : deux prescriptions comparables peuvent être séparées par une autre plage de répétitions.
+- Préférences facultatives sauvegardées en JSON 5, sans migration Room ni changement de CSV.
+- Analyse et sources dans `docs/programme-adapte.md`. Les essais effectués sont détaillés dans `docs/validation-0.8.1.md`.
+
 ## 0.8.0 — 27 octobre 2026
 
 - Notification silencieuse avec chronomètre natif en décompte pendant le repos ; annulation à la pause et à la fin.

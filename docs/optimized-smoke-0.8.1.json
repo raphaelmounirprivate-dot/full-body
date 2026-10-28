@@ -1,0 +1,12 @@
+{
+  "version": "0.8.1",
+  "versionCode": 11,
+  "optimizedApkSha256": "69a53dac6b0690c7915d551ac03fc0641a3f5e1ac151cdd5f149e08422f97821",
+  "bytes": 6790832,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedApkHashMatchesArtifact": true,
+  "normalAndLargeFontAndDarkCaptures": true,
+  "newSessionBUsesSelectedCableVariant": true,
+  "noFatalExceptionInProcessLog": true,
+  "physicalPhoneTested": false
+}

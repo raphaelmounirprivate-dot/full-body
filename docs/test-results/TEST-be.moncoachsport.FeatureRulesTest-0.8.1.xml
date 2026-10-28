@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="be.moncoachsport.FeatureRulesTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-28T07:35:27.019Z" hostname="DESKTOP-N5ECKPI" time="0.084">
+  <properties/>
+  <testcase name="variantUsesItsOwnIdAndExtraSeriesIsNotLost" classname="be.moncoachsport.FeatureRulesTest" time="0.051"/>
+  <testcase name="homeOrderAndGoalAreValidated" classname="be.moncoachsport.FeatureRulesTest" time="0.004"/>
+  <testcase name="guidedSequenceFollowsOnlyPersistedValidatedSets" classname="be.moncoachsport.FeatureRulesTest" time="0.0"/>
+  <testcase name="completedAndSkippedPlanHasNoNextSet" classname="be.moncoachsport.FeatureRulesTest" time="0.001"/>
+  <testcase name="videoLinksRejectLookalikeHostsAndExecutableSchemes" classname="be.moncoachsport.FeatureRulesTest" time="0.01"/>
+  <testcase name="measurementRejectsEmptyFutureAndNonFiniteValues" classname="be.moncoachsport.FeatureRulesTest" time="0.005"/>
+  <testcase name="pointsUseUniqueFinishedSessionsAndLocalCompletionDate" classname="be.moncoachsport.FeatureRulesTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

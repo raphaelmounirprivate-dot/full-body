@@ -28,6 +28,7 @@ data class PersonalOptions(
     val challenges: Boolean = false,
     val videos: Map<String, String> = emptyMap(),
     val exerciseLevels: Map<String, String> = emptyMap(),
+    val preferredVariants: Map<String, String> = emptyMap(),
 )
 
 object PersonalCodec {
@@ -36,6 +37,7 @@ object PersonalCodec {
         .put("level", o.level).put("homeOrder", JSONArray(o.homeOrder)).put("hidden", JSONArray(o.hidden.toList()))
         .put("weeklyGoal", o.weeklyGoal).put("challenges", o.challenges).put("videos", JSONObject(o.videos))
         .put("exerciseLevels", JSONObject(o.exerciseLevels))
+        .put("preferredVariants", JSONObject(o.preferredVariants))
 
     fun decode(j: JSONObject): PersonalOptions {
         fun strings(key: String) = j.getJSONArray(key).let { a -> (0 until a.length()).map { a.getString(it) } }
@@ -43,7 +45,10 @@ object PersonalCodec {
         val o = PersonalOptions(j.getBoolean("keepScreen"), j.getBoolean("guided"), j.getBoolean("cycleReminder"),
             j.getString("level"), strings("homeOrder"), strings("hidden").toSet(),
             j.getInt("weeklyGoal"), j.getBoolean("challenges"), videos,
-            j.optJSONObject("exerciseLevels")?.let { v -> v.keys().asSequence().associateWith { v.getString(it) } }.orEmpty())
+            j.optJSONObject("exerciseLevels")?.let { v -> v.keys().asSequence().associateWith { v.getString(it) } }.orEmpty(),
+            if (j.has("preferredVariants")) j.getJSONObject("preferredVariants").let { v ->
+                v.keys().asSequence().associateWith { v.getString(it) }
+            } else emptyMap())
         FeatureRules.validate(o)
         return o
     }

@@ -254,6 +254,12 @@ object Programs {
                         it.program == t.program &&
                         it.sets.any { s -> s.exerciseId == p.id }
                 }
+                // A different repetition range is a different prescription, not a failed passage.
+                .filter { old ->
+                    val previous = plan(old, exercises).firstOrNull { it.id == p.id }
+                    previous != null && previous.min == p.min && previous.max == p.max &&
+                        previous.unit == p.unit
+                }
                 .sortedBy { it.finished }
                 .takeLast(2)
         if (prior.size < 2 || machine.isBlank() || setting.isBlank()) return false

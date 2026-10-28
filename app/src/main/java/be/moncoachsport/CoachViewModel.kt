@@ -238,7 +238,9 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
                 .filter { it.program == selected && it.template == template && it.finished != null }
                 .maxByOrNull { it.finished!! }
         val alternatives =
-            if (selected == Programs.CYCLE) prior?.alternatives.orEmpty() else emptyMap()
+            if (selected == Programs.CYCLE) ProgramAdaptation.alternatives(
+                template, prior?.alternatives.orEmpty(), repository.personal.first().preferredVariants
+            ) else emptyMap()
         val allowed =
             Programs.cycle.getValue(template).take(3).map { alternatives[it.id] ?: it.id }.toSet()
         val extras =
@@ -309,13 +311,14 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
         repository.save(t.copy(skipped = if (id in t.skipped) t.skipped - id else t.skipped + id))
     }
 
-    fun extra(id: String) = action {
+    fun extra(id: String, recoveryConfirmed: Boolean = false) = action {
         val t = repository.currentSessions().firstOrNull { it.isActive } ?: return@action
         val slot = Programs.plan(t, exercisesFor(t.program)).indexOfFirst { it.id == id }
         require(Programs.extraAllowed(t, slot)) {
             "Troisième série non autorisée pour cet exercice ou cette semaine"
         }
         val removing = id in t.extraSets
+        require(removing || recoveryConfirmed) { "Confirmez d’abord la maîtrise du geste et votre récupération." }
         require(removing || t.week in 5..6) { "Semaines 7–8 : conserver un volume stable." }
         require(!removing || t.sets.none { it.exerciseId == id && it.index == 2 }) {
             "La troisième série est déjà enregistrée : elle est conservée."

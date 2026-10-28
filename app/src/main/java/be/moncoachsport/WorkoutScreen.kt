@@ -311,12 +311,7 @@ private fun ExerciseLog(
                 Programs.extraAllowed(active, slot) &&
                     (active.week in 5..6 || e.id in active.extraSets)
             ) {
-                OutlinedButton(onClick = { vm.extra(e.id) }) {
-                    Text(
-                        if (e.id in active.extraSets) "Revenir à deux séries"
-                        else "Ajouter une 3e série facultative"
-                    )
-                }
+                ExtraSetControl(active, e.id, sessions, vm)
             }
             if (e.id in active.skipped) {
                 Text("Exercice sauté pour cette séance.")

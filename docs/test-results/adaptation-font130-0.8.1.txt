@@ -1,0 +1,5 @@
+be.moncoachsport.AdaptationTest:...
+
+Time: 7.958
+
+OK (3 tests)

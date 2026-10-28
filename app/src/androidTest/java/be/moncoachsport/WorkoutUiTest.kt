@@ -55,11 +55,12 @@ class WorkoutUiTest {
             compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
         }
         val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
-        compose.onAllNodesWithText("kg total")[0].performTextReplacement("25")
+        compose.onNodeWithContentDescription("Charge de Presse à cuisses, série 1").performTextReplacement("25")
         hideKeyboard()
+        compose.waitUntil(10000) { vm.active?.drafts?.get("F1-0-kg") == "25" }
         compose.onNodeWithText("Valider la série").performScrollTo().performClick()
         compose.waitUntil(10000) { vm.active?.sets?.size == 1 }
-        compose.onAllNodesWithText("kg total")[0].performScrollTo().performTextReplacement("28")
+        compose.onNodeWithContentDescription("Charge de Presse à cuisses, série 2").performScrollTo().performTextReplacement("28")
         hideKeyboard()
         compose.waitUntil(10000) { vm.active?.drafts?.get("F1-1-kg") == "28" }
         val original = vm.active!!
@@ -86,20 +87,24 @@ class WorkoutUiTest {
 
     @Test
     fun choosingBeforeStartingAndSharedExercisesKeepSeparateDrafts() {
+        val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
         compose.onNodeWithText("Séance").performClick()
         chooseSession("C")
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
         }
         openExercise("Tirage vertical")
-        compose.onAllNodesWithText("kg total")[0].performTextReplacement("30")
+        compose.onNodeWithContentDescription("Charge de Tirage vertical, série 1").performScrollTo().performTextReplacement("30")
         hideKeyboard()
+        compose.waitUntil(10000) { vm.active?.drafts?.get("F3-0-kg") == "30" }
         chooseSession("A")
         openExercise("Tirage vertical")
         compose.onAllNodesWithText("kg total")[0].assert(hasText("30", substring = true).not())
         chooseSession("C")
         openExercise("Tirage vertical")
-        compose.onAllNodesWithText("kg total")[0].assertTextContains("30")
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex))
+            .performScrollToNode(hasContentDescription("Charge de Tirage vertical, série 1"))
+        compose.onNodeWithContentDescription("Charge de Tirage vertical, série 1").assertTextContains("30")
     }
 
     @Test
@@ -241,12 +246,14 @@ class WorkoutUiTest {
 
     @Test
     fun exerciseSheetOpensFromWorkoutAndKeepsTheDraft() {
+        val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
         fun firstCharge() = compose.onNodeWithContentDescription("Charge de Presse à cuisses, série 1")
         compose.onNodeWithText("Commencer ma séance").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
         }
         firstCharge().performTextReplacement("25")
+        compose.waitUntil(10000) { vm.active?.drafts?.get("F1-0-kg") == "25" }
         firstCharge().assertTextContains("25")
         compose.runOnUiThread {
             compose.activity
@@ -293,6 +300,7 @@ class WorkoutUiTest {
             compose.onAllNodesWithText("kg total").fetchSemanticsNodes().isNotEmpty()
         }
         firstCharge().performTextReplacement("25")
+        compose.waitUntil(10000) { vm.active?.drafts?.get("F1-0-kg") == "25" }
         compose.runOnUiThread {
             compose.activity
                 .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
@@ -301,12 +309,16 @@ class WorkoutUiTest {
         }
         openExercise("Chest press guidée")
         openExercise("Presse à cuisses")
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex))
+            .performScrollToNode(hasContentDescription("Charge de Presse à cuisses, série 1"))
         firstCharge().assertTextContains("25")
         compose.onAllNodesWithText("Valider la série")[0].performScrollTo().performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Série 1 · enregistrée").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithContentDescription("Corriger la série 1").performScrollTo().performClick()
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex))
+            .performScrollToNode(hasContentDescription("Charge de Presse à cuisses, série 1"))
         firstCharge().assertTextContains("25")
         firstCharge().performTextReplacement("30")
         firstCharge().assertTextContains("30")

@@ -4,6 +4,17 @@
 
 ## Priorité séance
 
+### Adaptations 0.8.1 — 28 octobre 2026
+
+- [x] Analyse du programme pour remise en forme trois fois par semaine, puis prise de muscle ; sources et limites dans [programme-adapte.md](programme-adapte.md).
+- [x] Choix explicites des variantes existantes A/F19, B/F10 et C/F16 après apprentissage, avec aperçu et application aux nouvelles séances uniquement.
+- [x] Bilan des séances, séries directes validées et cardio en salle sur sept jours glissants du cycle courant ; avertissement si historique incomplet.
+- [x] Confirmation de maîtrise et récupération avant l’ajout manuel d’une troisième série ; aucune hausse liée au calendrier seul.
+- [x] Comparaison de deux passages de même prescription pour la progression, sans blocage par une autre plage de répétitions entre les deux.
+- [x] Préférences facultatives incluses dans JSON 5 ; import ancien conservant le choix local. Room v4 et CSV v3 inchangés.
+- [ ] Évaluer un second travail du tronc, le volume ultérieur d’hypertrophie et les éventuelles limitations personnelles après retour sur les séances réelles.
+- [ ] Vérifier les adaptations sur le téléphone physique ; les essais QA restent des essais sur émulateur.
+
 ### Ajouts 0.8.0
 
 - [x] Notification silencieuse de repos en cours avec chronomètre Android natif en décompte ; contenu générique visible sur l’écran verrouillé selon les réglages du téléphone.

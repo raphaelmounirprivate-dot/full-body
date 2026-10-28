@@ -587,7 +587,9 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
                 measurements.forEach { db.measurements().put(it) }
             }
         }
-        if (personal != null) setPersonal(personal.copy(cycleReminder = false))
+        if (personal != null) setPersonal(personal.copy(cycleReminder = false,
+            preferredVariants = if (j.getJSONObject("personal").has("preferredVariants")) personal.preferredVariants
+                else this.personal.first().preferredVariants))
         if (preferences != null)
             prefs.edit {
                 it[stringPreferencesKey("program")] = importedProgram

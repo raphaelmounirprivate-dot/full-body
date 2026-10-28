@@ -135,6 +135,7 @@ fun CoachHome(
         item { HomeCardSettings(vm) }
         item { WidgetCard() }
         item { ProgramSelector(vm, program, cycleStart) }
+        if (program == Programs.CYCLE) item { AdaptationPanel(vm, sessions, cycleStart) }
         item { GuideSafety(vm.guideSections) }
         if (program == Programs.CYCLE) item { PhaseCard(currentWeek) }
         item {

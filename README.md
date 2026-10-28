@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.8.0
+# Mon Coach Sport — Android 0.8.1
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -27,6 +27,8 @@ Captures de l’APK optimisé 0.8.0 sur l’émulateur Android 11, avec des donn
 ## Développement
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
+
+Le code 0.8.1 ajoute **Accueil → Adapter mes prochaines séances** : variantes déjà présentes dans le guide, après apprentissage, avec priorité aux machines et poulies. Il affiche aussi le travail réellement effectué sur sept jours et demande un bilan avant une troisième série. Les séances en pause et l’historique gardent leurs paramètres. [Analyse du programme et sources](docs/programme-adapte.md) · [validation locale 0.8.1](docs/validation-0.8.1.md). Le téléchargement GitHub ci-dessus reste la version publiée 0.8.0.
 
 ## Fonctionnalités
 

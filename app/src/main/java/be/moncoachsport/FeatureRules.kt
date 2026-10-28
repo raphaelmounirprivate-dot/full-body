@@ -8,6 +8,9 @@ object FeatureRules {
     val levels = listOf("Débutant", "Avancé", "Confirmé")
     val homeCards = listOf("stats", "shortcuts", "last", "challenge")
     fun validate(o: PersonalOptions) {
+        require(o.preferredVariants.size <= 3 && o.preferredVariants.all { (key, value) ->
+            ProgramAdaptation.choices.any { it.key == key && value in setOf(it.slot, it.replacement) }
+        }) { "Préférence de variante inconnue" }
         require(o.level in levels) { "Niveau inconnu" }
         require(o.homeOrder.size == homeCards.size && o.homeOrder.toSet() == homeCards.toSet()) { "Organisation de l’accueil invalide" }
         require(o.hidden.all { it in homeCards }) { "Carte d’accueil inconnue" }
