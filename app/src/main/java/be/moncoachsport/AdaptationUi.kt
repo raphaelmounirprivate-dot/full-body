@@ -20,6 +20,7 @@ internal fun AdaptationPanel(vm: CoachViewModel, sessions: List<Training>, cycle
     var open by rememberSaveable { mutableStateOf(false) }
     val activity = ProgramAdaptation.activity(sessions, cycleStart, System.currentTimeMillis())
     Panel("Remise en forme · machines et poulies") {
+        Text(ClubMachines.equipmentSummary, style = MaterialTheme.typography.bodySmall)
         Text("Objectif : trois séances par semaine, avec au moins un jour sans musculation entre deux séances. Deux séries de départ ; la prise de muscle viendra progressivement.")
         OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) {
             Text("Adapter mes prochaines séances")
@@ -38,7 +39,7 @@ internal fun AdaptationPanel(vm: CoachViewModel, sessions: List<Training>, cycle
         val initial = ProgramAdaptation.choices.associate { choice ->
             val prior = sessions.filter { it.program == Programs.CYCLE && it.template == choice.template && it.finished != null }
                 .maxByOrNull { it.finished!! }?.alternatives.orEmpty()
-            choice.key to (options.preferredVariants[choice.key] ?: prior[choice.slot] ?: choice.slot)
+            choice.key to ProgramAdaptation.choiceValue(choice, prior, options.preferredVariants)
         }
         val priorAlternatives = listOf("A", "B", "C").associateWith { template ->
             sessions.filter { it.program == Programs.CYCLE && it.template == template && it.finished != null }
@@ -58,6 +59,7 @@ internal fun AdaptationDialog(initial: Map<String, String>, priorAlternatives: M
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Activez une variante seulement après avoir appris ses réglages et son geste. Chaque choix remplace un mouvement du guide, sans en ajouter.")
+                Text("B : le Rear Kick remplace le hip thrust pour les nouvelles séances. C’est une adaptation personnelle, à raison de 10–15 répétitions par jambe. Désactivez ce choix pour garder le hip thrust dans les futures séances.")
                 Text("Pour commencer : apprendre l’incliné en B permet de varier la poussée en gardant la chest press en A et C. Les autres choix peuvent attendre.")
                 ProgramAdaptation.choices.forEach { choice ->
                     val label = "${choice.template} · ${Programs.names.getValue(choice.replacement)}"

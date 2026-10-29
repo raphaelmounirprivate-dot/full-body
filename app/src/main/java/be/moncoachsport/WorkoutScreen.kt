@@ -82,121 +82,155 @@ internal fun Workout(vm: CoachViewModel, sessions: List<Training>) {
         }
     val workoutScroll = rememberLazyListState()
     val nextSet = remember(active, exercises) { FeatureRules.nextSet(active, exercises) }
-    LaunchedEffect(options.guided, nextSet?.first, active.id) {
-        if (options.guided) workoutScroll.scrollToItem(0)
+    LaunchedEffect(active.id, options.guided, if (options.guided) nextSet else null) {
+        workoutScroll.scrollToItem(0)
     }
-    LaunchedEffect(active.id) { workoutScroll.scrollToItem(0) }
-    LazyColumn(
-        state = workoutScroll,
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        stickyHeader {
-            Surface(color = MaterialTheme.colorScheme.background) {
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "Séance ${active.template}",
-                        Modifier.weight(1f),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    SessionChooser(vm, sessions, active.program, active)
-                }
-            }
-        }
-        item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Enchaînement guidé", Modifier.weight(1f))
-                Switch(options.guided, { value -> vm.setPersonal { it.copy(guided = value) } },
-                    modifier = Modifier.semantics { contentDescription = "Enchaînement guidé" })
-            }
-        }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Surface(
-                    color = Color(0xFF0A203B),
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+    val record by vm.personalRecord.collectAsStateWithLifecycle()
+    Column(Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            state = workoutScroll,
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            stickyHeader {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "${Programs.title(active.program)}${if(active.program==Programs.CYCLE) " · Semaine ${active.week}" else ""}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color(0xFFC4DDFF),
+                            "Séance ${active.template}",
+                            Modifier.weight(1f),
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
                         )
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                "$completedSets / $plannedSets séries",
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text("${plan.size} exercices", color = Color(0xFFC4DDFF))
-                        }
+                        SessionChooser(vm, sessions, active.program, active)
+                    }
+                }
+            }
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Enchaînement guidé", Modifier.weight(1f))
+                    Switch(
+                        options.guided,
+                        { value -> vm.setPersonal { it.copy(guided = value) } },
+                        modifier = Modifier.semantics { contentDescription = "Enchaînement guidé" },
+                    )
+                }
+            }
+            item {
+                if (options.guided) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            if (nextSet == null) "Bilan · $completedSets / $plannedSets séries"
+                            else
+                                "Exercice ${plan.indexOfFirst { it.id == nextSet.first } + 1} / ${plan.size} · $completedSets / $plannedSets séries",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                         LinearProgressIndicator(
                             progress = {
                                 if (plannedSets == 0) 0f else completedSets.toFloat() / plannedSets
                             },
-                            modifier = Modifier.fillMaxWidth().height(6.dp),
-                            color = Color(0xFF80B6FF),
-                            trackColor = Color(0xFF2B435E),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
-                }
+                } else
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Surface(
+                            color = Color(0xFF0A203B),
+                            contentColor = Color.White,
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Column(
+                                Modifier.fillMaxWidth().padding(18.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Text(
+                                    "${Programs.title(active.program)}${if(active.program==Programs.CYCLE) " · Semaine ${active.week}" else ""}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Color(0xFFC4DDFF),
+                                )
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        "$completedSets / $plannedSets séries",
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Text("${plan.size} exercices", color = Color(0xFFC4DDFF))
+                                }
+                                LinearProgressIndicator(
+                                    progress = {
+                                        if (plannedSets == 0) 0f
+                                        else completedSets.toFloat() / plannedSets
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(6.dp),
+                                    color = Color(0xFF80B6FF),
+                                    trackColor = Color(0xFF2B435E),
+                                )
+                            }
+                        }
+                    }
             }
-        }
-        item {
-            var warmupOpen by rememberSaveable(active.id) { mutableStateOf(false) }
-            Column {
-                TextButton(
-                    onClick = { warmupOpen = !warmupOpen },
-                    contentPadding = PaddingValues(horizontal = 0.dp),
+            if (!options.guided || completedSets == 0)
+                item {
+                    var warmupOpen by rememberSaveable(active.id) { mutableStateOf(false) }
+                    Column {
+                        TextButton(
+                            onClick = { warmupOpen = !warmupOpen },
+                            contentPadding = PaddingValues(horizontal = 0.dp),
+                        ) {
+                            Icon(Icons.Outlined.PlayArrow, null)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                "Préparer mon échauffement",
+                                Modifier.weight(1f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                            )
+                            Icon(
+                                if (warmupOpen) Icons.Outlined.KeyboardArrowUp
+                                else Icons.Outlined.KeyboardArrowDown,
+                                null,
+                            )
+                        }
+                        if (warmupOpen) WarmupText(active.program)
+                    }
+                }
+            items(
+                if (options.guided) plan.filter { it.id == nextSet?.first } else plan,
+                key = { it.id },
+            ) { p ->
+                val exercise = Programs.exercise(p, active, exercises)
+                ExerciseLog(
+                    exercise,
+                    p,
+                    active,
+                    sessions,
+                    vm,
+                    plan.indexOf(p) + 1,
+                    options.guided || expandedSlot == p.id,
+                    if (options.guided) nextSet?.second else null,
+                    p.id == plan.lastOrNull { it.id !in active.skipped }?.id,
                 ) {
-                    Icon(Icons.Outlined.PlayArrow, null)
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        "Préparer mon échauffement",
-                        Modifier.weight(1f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Start,
-                    )
-                    Icon(
-                        if (warmupOpen) Icons.Outlined.KeyboardArrowUp
-                        else Icons.Outlined.KeyboardArrowDown,
-                        null,
-                    )
+                    expandedSlot = if (expandedSlot == p.id) null else p.id
                 }
-                if (warmupOpen) WarmupText(active.program)
+            }
+            item {
+                if (options.guided && nextSet == null)
+                    Text(
+                        "Toutes les séries prévues sont validées. Complétez le bilan puis terminez l’entraînement."
+                    )
+                if (!options.guided || nextSet == null) Summary(vm, active)
+                else
+                    TextButton(onClick = { vm.setPersonal { it.copy(guided = false) } }) {
+                        Text("Voir toute la séance et le bilan")
+                    }
             }
         }
-        if (end > 0 || paused > 0) item { RestTimerCard(vm, end, paused) }
-        items(if (options.guided) plan.filter { it.id == nextSet?.first } else plan, key = { it.id }) { p ->
-            val exercise = Programs.exercise(p, active, exercises)
-            ExerciseLog(
-                exercise,
-                p,
-                active,
-                sessions,
-                vm,
-                plan.indexOf(p) + 1,
-                options.guided || expandedSlot == p.id,
-                if (options.guided) nextSet?.second else null,
-                p.id == plan.lastOrNull { it.id !in active.skipped }?.id,
-            ) {
-                expandedSlot = if (expandedSlot == p.id) null else p.id
-            }
-        }
-        item {
-            if (options.guided && nextSet == null) Text("Toutes les séries prévues sont validées. Complétez le bilan puis terminez l’entraînement.")
-            if (!options.guided || nextSet == null) Summary(vm, active)
-            else TextButton(onClick = { vm.setPersonal { it.copy(guided = false) } }) { Text("Voir toute la séance et le bilan") }
-        }
+        record?.takeIf { it.sessionId == active.id }?.let { RecordBanner(vm, it) }
+        if (end > 0 || paused > 0) RestTimerCard(vm, end, paused)
     }
 }
 
@@ -213,6 +247,8 @@ private fun ExerciseLog(
     lastExercise: Boolean,
     toggle: () -> Unit,
 ) {
+    val guided = guidedIndex != null
+    var optionsOpen by rememberSaveable(active.id, e.id) { mutableStateOf(false) }
     val previous =
         sessions
             .filter { it.finished != null && it.program == active.program }
@@ -279,14 +315,19 @@ private fun ExerciseLog(
             ExerciseSheetButton(e, compact = true, program = active.program, vm = vm)
             if (!expanded) return@Column
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Text(
-                "RIR : répétitions encore possibles à la fin de la série.",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            if (!guided || optionsOpen)
+                Text(
+                    "RIR : répétitions encore possibles à la fin de la série.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             if (e.id == "F5")
                 Text(
                     if (active.program == Programs.CYCLE) "Par bras ; repos après les deux bras."
                     else "Par bras"
+                )
+            if (e.id == ClubMachines.REAR_KICK)
+                Text(
+                    "Par jambe. Une série se valide après les deux jambes ; notez les répétitions et la réserve du côté le plus limité. Repos après les deux jambes."
                 )
             if (active.program == Programs.LEGACY && e.id in listOf("F12", "F13"))
                 Text(
@@ -306,9 +347,11 @@ private fun ExerciseLog(
                 }
             }
             val slot = Programs.plan(active, vm.exercisesFor(active.program)).indexOf(p)
-            if (active.program == Programs.CYCLE) VariantChoices(active, slot, vm)
+            if ((!guided || optionsOpen) && active.program == Programs.CYCLE)
+                VariantChoices(active, slot, vm)
             if (
-                Programs.extraAllowed(active, slot) &&
+                (!guided || optionsOpen) &&
+                    Programs.extraAllowed(active, slot) &&
                     (active.week in 5..6 || e.id in active.extraSets)
             ) {
                 ExtraSetControl(active, e.id, sessions, vm)
@@ -317,16 +360,32 @@ private fun ExerciseLog(
                 Text("Exercice sauté pour cette séance.")
                 return@Column
             }
-            (if (guidedIndex == null) (0 until e.sets).toList() else listOf(guidedIndex)).forEach { index ->
+            (if (guidedIndex == null) (0 until e.sets).toList() else listOf(guidedIndex)).forEach {
+                index ->
                 val stored = active.sets.firstOrNull { it.exerciseId == e.id && it.index == index }
                 val last =
                     previous?.sets?.firstOrNull { it.exerciseId == e.id && it.index == index }
-                SetEditor(e, p, index, stored, last, active, sessions, vm,
-                    if (guidedIndex == null) null else if (index + 1 < e.sets) "Valider → série suivante"
-                    else if (lastExercise) "Valider → bilan" else "Valider → exercice suivant"
-                ) { vm.log(it, active.id) }
+                SetEditor(
+                    e,
+                    p,
+                    index,
+                    stored,
+                    last,
+                    active,
+                    sessions,
+                    vm,
+                    if (guidedIndex == null) null
+                    else if (index + 1 < e.sets) "Valider → série suivante"
+                    else if (lastExercise) "Valider → bilan" else "Valider → exercice suivant",
+                ) {
+                    vm.log(it, active.id)
+                }
             }
-            RestControls(p, active, vm)
+            if (guided)
+                TextButton(onClick = { optionsOpen = !optionsOpen }) {
+                    Text(if (optionsOpen) "Masquer les options" else "Options de l’exercice")
+                }
+            if (!guided || optionsOpen) RestControls(p, active, vm)
         }
     }
 }

@@ -46,7 +46,17 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             }
 
     private val legacyExercises = loadExercises("exercises.json")
-    val guideExercises = loadExercises("guide/exercises.json")
+    val guideExercises = loadExercises("guide/exercises.json").let { source ->
+        val corrections = JSONObject(app.assets.open("guide/illustration-overrides.json").bufferedReader().use { it.readText() })
+        source.map { exercise ->
+            val correction = corrections.optJSONObject(exercise.id)
+            if (correction == null) exercise else exercise.copy(
+                image = correction.getString("image"),
+                caption = correction.getString("caption"),
+                warning = exercise.warning + " " + correction.getString("note"),
+            )
+        }
+    }.let(ClubMachines::catalogue)
 
     fun exercisesFor(program: String) =
         if (program == Programs.CYCLE) guideExercises else legacyExercises
@@ -139,6 +149,14 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun adjustRest(seconds: Int) = action {
         val updated = repository.adjustTimer(seconds)
+        scheduler.update(updated.first, repository.alerts.first())
+    }
+    fun toggleRest(expectedEnd: Long, expectedPaused: Long) = action {
+        val updated = repository.toggleTimer(expectedEnd, expectedPaused)
+        scheduler.update(updated.first, repository.alerts.first())
+    }
+    fun cancelRest(expectedEnd: Long, expectedPaused: Long) = action {
+        val updated = repository.cancelTimer(expectedEnd, expectedPaused)
         scheduler.update(updated.first, repository.alerts.first())
     }
     fun dismissRest(expectedEnd: Long) = action {
@@ -290,7 +308,8 @@ class CoachViewModel(app: Application) : AndroidViewModel(app) {
             personalRecord.value = notice
             viewModelScope.launch { delay(6000); dismissRecord(notice.token) }
         }
-        if (repository.autoRest.first() && p.restMax > 0) {
+        val newlyValidated = set.done && t.sets.none { it.exerciseId == set.exerciseId && it.index == set.index && it.done }
+        if (newlyValidated && repository.autoRest.first() && p.restMax > 0) {
             val seconds =
                 t.drafts["${p.id}-rest"]?.toIntOrNull()?.takeIf { it in p.restMin..p.restMax }
                     ?: p.restMax

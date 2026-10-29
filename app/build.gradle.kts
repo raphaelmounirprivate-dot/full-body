@@ -11,8 +11,8 @@ android {
         applicationId = "be.moncoachsport"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.8.1"
+        versionCode = 14
+        versionName = "0.9.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }

@@ -92,6 +92,8 @@ private fun ExerciseDetails(e: Exercise) {
         )
     }
     if (e.caption.isNotBlank()) Text(e.caption, style = MaterialTheme.typography.bodySmall)
+    if (e.accessory.isNotBlank() && (e.sourcePage > 0 || e.id == ClubMachines.REAR_KICK))
+        Text(e.accessory, style = MaterialTheme.typography.bodyMedium)
     Text("Muscles : ${e.muscles}")
     Text("Installer", fontWeight = FontWeight.Bold)
     Text("Réglage : ${e.setup}")
@@ -104,12 +106,13 @@ private fun ExerciseDetails(e: Exercise) {
         }
     )
     Text(
-        if (e.sourcePage > 0)
+        if (e.id == ClubMachines.REAR_KICK) "Adaptation personnelle · ${e.id}. ${e.warning}"
+        else if (e.sourcePage > 0)
             "Guide personnel Jims Namur · ${e.id}, page ${e.sourcePage}. ${e.warning}"
         else "Archive : illustration et consignes de l’ancien PDF de 8 pages.",
         style = MaterialTheme.typography.bodySmall,
     )
-    if (e.sourcePage > 0)
+    if (e.sourcePage > 0 || e.id == ClubMachines.REAR_KICK)
         Programs.variants
             .filter { it.replacement == e.id }
             .forEach { Text(it.condition, style = MaterialTheme.typography.bodySmall) }
@@ -129,7 +132,7 @@ internal fun Catalogue(exercises: List<Exercise>, program: String, vm: CoachView
         mapOf(
             "Pectoraux" to setOf("F2", "F10", "F16"),
             "Dos" to setOf("F3", "F9", "F14"),
-            "Jambes" to setOf("F1", "F4", "F7", "F8", "F11", "F18"),
+            "Jambes" to setOf("F1", "F4", "F7", "F8", "F11", "F18", ClubMachines.REAR_KICK),
             "Épaules" to setOf("F5", "F15"),
             "Bras" to setOf("F12", "F13"),
             "Tronc" to setOf("F6", "F19"),
@@ -143,7 +146,7 @@ internal fun Catalogue(exercises: List<Exercise>, program: String, vm: CoachView
             Heading(
                 "Votre bibliothèque",
                 "Les mouvements.",
-                if (program == Programs.CYCLE) "19 fiches illustrées · guide Jims Namur"
+                if (program == Programs.CYCLE) "19 fiches du guide · 1 machine personnelle"
                 else "Archive · ancien programme de 8 pages",
             )
         }
@@ -215,9 +218,13 @@ fun ExerciseThumbnail(e: Exercise, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val bitmap =
         remember(e.image) {
-            context.assets.open(e.image).use { BitmapFactory.decodeStream(it).asImageBitmap() }
+            runCatching { context.assets.open(e.image).use { BitmapFactory.decodeStream(it)?.asImageBitmap() } }.getOrNull()
         }
-    Image(
+    if (bitmap == null) {
+        androidx.compose.foundation.layout.Box(modifier.background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(14.dp)), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Text("Machine", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    } else Image(
         bitmap,
         "Aperçu de ${e.name}",
         modifier.background(Color.White, RoundedCornerShape(14.dp)),

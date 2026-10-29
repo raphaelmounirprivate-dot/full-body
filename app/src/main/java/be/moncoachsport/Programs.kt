@@ -87,9 +87,15 @@ object Programs {
             "F17" to "Rameur",
             "F18" to "Leg extension",
             "F19" to "Crunch à la poulie haute",
+            ClubMachines.REAR_KICK to "Rear Kick machine",
         )
     val variants =
         listOf(
+            ExerciseVariant(
+                "B", "F11", ClubMachines.REAR_KICK,
+                "Adaptation personnelle demandée : Rear Kick à la place du hip thrust. Mouvement unilatéral, réglages et charges distincts ; faire montrer les appuis. Ce remplacement n’est pas une prescription du PDF.",
+                10, 15, 90, 90, "rép / jambe",
+            ),
             ExerciseVariant(
                 "B",
                 "F7",

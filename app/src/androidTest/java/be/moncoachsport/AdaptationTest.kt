@@ -20,6 +20,8 @@ class AdaptationTest {
         compose.waitUntil(10000) { vm.message.value == "Toutes les données et préférences ont été supprimées" &&
             vm.databaseState.value.loaded && vm.sessions.value.isEmpty() && vm.personal.value == PersonalOptions() }
         vm.message.value = ""
+        vm.setPersonal { it.copy(guided = false) }
+        compose.waitUntil(10000) { !vm.personal.value.guided }
         compose.waitForIdle()
     }
     private fun scroll(text: String) = compose.onNode(SemanticsMatcher.keyIsDefined(
@@ -35,12 +37,12 @@ class AdaptationTest {
         compose.onNodeWithContentDescription("B · Développé incliné aux poulies").performClick()
         compose.onNodeWithText("Enregistrer pour les prochaines séances").performClick()
         compose.waitUntil(10000) { vm.personal.value.preferredVariants["B:F2"] == "F10" }
-        assertTrue(vm.active!!.alternatives.isEmpty())
+        assertFalse(vm.active!!.alternatives.containsKey("F2"))
         vm.start("A")
         compose.waitUntil(10000) { vm.active?.template == "A" }
         vm.start("B")
         compose.waitUntil(10000) { vm.active?.id == originalId }
-        assertTrue(vm.active!!.alternatives.isEmpty())
+        assertFalse(vm.active!!.alternatives.containsKey("F2"))
         vm.eraseAll()
         compose.waitUntil(10000) { vm.sessions.value.isEmpty() && vm.personal.value == PersonalOptions() }
         vm.setPersonal { it.copy(preferredVariants = mapOf("B:F2" to "F10")) }

@@ -7,19 +7,20 @@ import java.time.temporal.TemporalAdjusters
 object FeatureRules {
     val levels = listOf("Débutant", "Avancé", "Confirmé")
     val homeCards = listOf("stats", "shortcuts", "last", "challenge")
+    private val exerciseKeys = (1..19).flatMap { listOf("cycle:F$it", "legacy:F$it") }.toSet() + "cycle:${ClubMachines.REAR_KICK}"
     fun validate(o: PersonalOptions) {
-        require(o.preferredVariants.size <= 3 && o.preferredVariants.all { (key, value) ->
+        require(o.preferredVariants.size <= ProgramAdaptation.choices.size && o.preferredVariants.all { (key, value) ->
             ProgramAdaptation.choices.any { it.key == key && value in setOf(it.slot, it.replacement) }
         }) { "Préférence de variante inconnue" }
         require(o.level in levels) { "Niveau inconnu" }
         require(o.homeOrder.size == homeCards.size && o.homeOrder.toSet() == homeCards.toSet()) { "Organisation de l’accueil invalide" }
         require(o.hidden.all { it in homeCards }) { "Carte d’accueil inconnue" }
         require(o.weeklyGoal in 1..7) { "Objectif : de 1 à 7 séances par semaine" }
-        require(o.exerciseLevels.size <= 38 && o.exerciseLevels.all { (id, level) ->
-            id.matches(Regex("(cycle|legacy):F([1-9]|1[0-9])")) && level in levels
+        require(o.exerciseLevels.size <= exerciseKeys.size && o.exerciseLevels.all { (id, level) ->
+            id in exerciseKeys && level in levels
         }) { "Repère de niveau d’exercice invalide" }
-        require(o.videos.size <= 38 && o.videos.all { (id, url) ->
-            id.matches(Regex("(cycle|legacy):F([1-9]|1[0-9])")) && validYoutube(url)
+        require(o.videos.size <= exerciseKeys.size && o.videos.all { (id, url) ->
+            id in exerciseKeys && validYoutube(url)
         }) { "Lien vidéo YouTube invalide" }
     }
     fun validYoutube(url: String): Boolean = runCatching {

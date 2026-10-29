@@ -1,8 +1,33 @@
 # Suivi des fonctionnalités
 
-État du développement 0.8.1, vérifié le 28 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
+État du développement local 0.9.1, vérifié le 29 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
 
 ## Priorité séance
+
+### Parcours 0.9.1
+
+- [x] Un exercice à la fois par défaut, prochaine série issue des données enregistrées ; passage suivant après deux séries ou le nombre configuré.
+- [x] Chrono hors de la zone défilante avec ajustements et pause, en modes guidé et liste.
+- [x] Repos lancé sur nouvelle validation réussie ; correction sans redémarrage du chrono.
+- [x] Initialisation unique des préférences ; conserver les choix ultérieurs et les données de séance.
+- [x] Message de record placé au-dessus du chrono pour garder ses commandes accessibles.
+- [x] Tests de visibilité, reprise, troisième série, migration des préférences et actions de repos périmées.
+- [ ] Vérifier le nouveau parcours sur le téléphone physique en conditions de salle.
+
+### Adaptation 0.9.0
+
+- [x] Rear Kick personnel R1 en remplacement de F11 dans les nouvelles B ; source F11 et séances anciennes inchangées.
+- [x] Option de garder le hip thrust dans les futures séances, remplacement manuel avant de commencer le mouvement.
+- [x] Séries par jambe ; validation après les deux côtés, reps/RIR du côté le plus limité et repos commun.
+- [x] Catalogue et sauvegardes reconnaissent R1 ; historique/records et liens vidéo distincts du hip thrust.
+- [x] Repères des machines Chest Press et Low Row Technogym, sans supposer leurs réglages ni tous les modèles du club.
+- [ ] Essai du Rear Kick avec le matériel réel et les réglages montrés par le coach ; les essais Android ne valident pas le geste.
+
+### Correction 0.8.2
+
+- [x] F4 leg curl assis : illustration d’une machine complète, vignette/fiche/zoom cohérents.
+- [x] PDF et extraction d’origine conservés ; correction distincte, documentée et identifiée dans la fiche.
+- [x] Nouvelle ressource mobile WebP d’environ 123 Ko ; provenance et prompt conservés.
 
 ### Adaptations 0.8.1 — 28 octobre 2026
 

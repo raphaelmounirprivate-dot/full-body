@@ -35,7 +35,6 @@ fun CoachApp(vm: CoachViewModel = viewModel(), workoutRequest: Int = 0) {
     val dark by vm.dark.collectAsStateWithLifecycle()
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
-    val record by vm.personalRecord.collectAsStateWithLifecycle()
     val nav = rememberNavController()
     LaunchedEffect(workoutRequest) { if (workoutRequest > 0) nav.navigate("Séance") { launchSingleTop = true } }
     val back by nav.currentBackStackEntryAsState()
@@ -49,10 +48,6 @@ fun CoachApp(vm: CoachViewModel = viewModel(), workoutRequest: Int = 0) {
         )
     MaterialTheme(colorScheme = coachColors(dark)) {
         Scaffold(
-            snackbarHost = {
-                record?.takeIf { it.sessionId == sessions.firstOrNull { t -> t.isActive }?.id &&
-                    back?.destination?.route == "Séance" }?.let { RecordBanner(vm,it) }
-            },
             topBar = { RecoveryBanner(vm) },
             bottomBar = {
                 NavigationBar {

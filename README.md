@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.8.1
+# Mon Coach Sport — Android 0.9.1 locale / 0.8.1 publiée
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -27,6 +27,12 @@ Captures de l’APK optimisé 0.8.0 sur l’émulateur Android 11, avec des donn
 ## Développement
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
+
+Version locale 0.9.1 : **un seul exercice à la fois et chrono de repos fixé en bas**, sans remonter la page. Repos lancé après validation d’une nouvelle série ; après les séries prévues, passage à l’exercice suivant en conservant le repos en cours. Mode guidé et repos automatique activés une fois lors de la mise à jour, puis choix personnels conservés. Le mode liste reste accessible pour corriger les séries. [Validation et captures](docs/validation-0.9.1.md). APK local : `output/v0.9.1/Mon-Coach-Sport-0.9.1.apk` ; pas de publication GitHub 0.9.1 dans cette étape.
+
+Version locale 0.9.0 : **Rear Kick machine en remplacement du hip thrust pour les nouvelles séances B**, fiche personnelle R1 et historique séparé. Point de départ : 2 × 10–15 par jambe, repos 90 s après les deux jambes ; une série se valide après les deux côtés. Le hip thrust reste dans les anciennes séances et peut être conservé dans les nouvelles via les préférences d’adaptation. Repères des machines photographiées : Chest Press et Low Row Technogym ; majorité du parc Technogym signalée par l’utilisateur. [Adaptation et sources](docs/rear-kick-et-machines.md) · [validation locale](docs/validation-0.9.0.md). L’APK local est préparé sous `output/v0.9.0/Mon-Coach-Sport-0.9.0.apk` ; aucune publication GitHub 0.9.0 n’a été effectuée.
+
+Correction locale 0.8.2 : la fiche F4 utilise uniquement le visuel de machine sélectionné par l’utilisateur. [Visuel et provenance](docs/illustrations/F4-machine-prompt.md) · [validation locale](docs/validation-0.8.2.md). L’APK 0.8.2 est prêt dans `output/v0.8.2/Mon-Coach-Sport-0.8.2.apk` ; il n’est pas encore publié sur GitHub. Le téléchargement ci-dessus reste la version 0.8.1.
 
 La version 0.8.1 ajoute **Accueil → Adapter mes prochaines séances** : variantes déjà présentes dans le guide, après apprentissage, avec priorité aux machines et poulies. Elle affiche aussi le travail réellement effectué sur sept jours et demande un bilan avant une troisième série. Les séances en pause et l’historique gardent leurs paramètres. [Analyse du programme et sources](docs/programme-adapte.md) · [validation 0.8.1 et publication vérifiée](docs/validation-0.8.1.md).
 

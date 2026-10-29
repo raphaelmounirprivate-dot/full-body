@@ -1,0 +1,13 @@
+{
+  "F4": {
+    "image": "guide/corrections/F4-machine.webp",
+    "imageSha256": "bd43550e26d53962f1240d09c86d2eda7c358d4a10d25562833b248234480109",
+    "originalImage": "guide/F4.webp",
+    "originalImageSha256": "a9ef8c4133f839218acc860915886e0756dc4c2bdba0e90a5877f78542337a9b",
+    "caption": "À gauche : position de départ, jambes presque tendues sur la machine. À droite : genoux fléchis. Visuel sélectionné par l’utilisateur.",
+    "note": "Illustration de machine corrigée dans l’application. Le PDF source, page 12, conserve son ancien schéma sur chaise. Modèle générique, non identifié au matériel du club.",
+    "sourceImage": "docs/illustrations/F4-machine.png",
+    "sourceImageSha256": "7fbe74454d0d0a60e0a981c61fa6736ffb99cfc4c23505282d6d76cc95c7c877",
+    "generation": "ImageGen intégré ; premier visuel explicitement retenu par l’utilisateur. Les autres essais ne sont pas utilisés."
+  }
+}

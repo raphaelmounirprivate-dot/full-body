@@ -57,6 +57,6 @@ internal fun ExerciseVideo(e: Exercise, program: String, vm: CoachViewModel) {
     if (url == null) TextButton(onClick = { open("https://www.youtube.com/results?search_query=" + Uri.encode(e.name + " technique exercice")) }) {
         Text("Rechercher une démonstration sur YouTube")
     }
-    Text("YouTube s’ouvre à l’extérieur et nécessite Internet. La fiche illustrée reste disponible hors ligne.",
+    Text("YouTube s’ouvre à l’extérieur et nécessite Internet. Les consignes de la fiche restent disponibles hors ligne.",
         style=MaterialTheme.typography.bodySmall)
 }

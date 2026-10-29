@@ -1,5 +1,28 @@
 # Historique des versions
 
+## 0.9.1 — Séance guidée et chrono fixe (29 octobre 2026, local)
+
+- Un exercice et la prochaine série à la fois par défaut ; passage au mouvement suivant après les séries prévues, avec respect d’une troisième série configurée.
+- Chrono fixé en bas de la séance, avec Pause/Reprendre et −15 s / +30 s ; reste visible pendant le défilement en mode guidé ou liste.
+- Repos automatique après une nouvelle validation réussie ; la correction d’une ancienne série ne redémarre pas le repos.
+- Activation unique du mode guidé et du repos automatique à la mise à jour ; choix ultérieurs et autres préférences conservés.
+- Options avancées repliables, bilan final et mode liste conservés. Les records s’affichent au-dessus du chrono.
+- Fermeture/pause protégées contre une commande visant une ancienne échéance ; défilement unique pour éviter un plantage de première mise en page.
+
+## 0.9.0 — Rear Kick et repères de la salle (29 octobre 2026, local)
+
+- Rear Kick R1 à la place du hip thrust F11 dans les nouvelles séances B, avec retour possible au hip thrust dans les préférences.
+- Fiche textuelle personnelle distincte du PDF, séries par jambe et validation après les deux côtés ; charges, vidéos et records séparés.
+- Anciennes séances et pauses inchangées ; import/export du nouveau mouvement en JSON et CSV.
+- Repères Chest Press et Low Row Technogym issus des photos ; majorité de matériel Technogym signalée, modèles et réglages non supposés.
+- Visuel F4 choisi par l’utilisateur conservé.
+
+## 0.8.2 — Leg curl assis sur machine (28 octobre 2026)
+
+- Correction de la fiche F4 : machine de leg curl assis au lieu du schéma sur chaise, avec le même personnage et le même style.
+- Nouvelle illustration et légende appliquées aux vignettes, à la fiche et au zoom ; provenance de la correction explicitée.
+- PDF original, empreintes, données extraites et historique conservés. Aucune modification du programme ni des formats de sauvegarde.
+
 ## 0.8.1 — Adaptations machines et poulies (28 octobre 2026)
 
 - Choix explicites des variantes existantes de poussée et de tronc pour les prochaines nouvelles séances ; anciennes séances conservées.

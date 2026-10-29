@@ -1,0 +1,11 @@
+python.exe : .........
+Au caractère Ligne:2 : 125
++ ... legcurl.py; & 'C:/Users/Darkmoon/.cache/codex-runtimes/codex-primary- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.686s
+
+OK

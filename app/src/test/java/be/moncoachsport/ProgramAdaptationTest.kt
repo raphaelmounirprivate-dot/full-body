@@ -9,9 +9,9 @@ class ProgramAdaptationTest {
 
     @Test fun choicesKeepLearnedVariantsAndPreserveOtherSlots() {
         val prior = mapOf("F7" to "F8", "F2" to "F10")
-        assertEquals(prior, ProgramAdaptation.alternatives("B", prior, emptyMap()))
-        assertEquals(mapOf("F7" to "F8"), ProgramAdaptation.alternatives("B", prior, mapOf("B:F2" to "F2")))
-        assertEquals(mapOf("F7" to "F8", "F2" to "F10"),
+        assertEquals(prior + ("F11" to ClubMachines.REAR_KICK), ProgramAdaptation.alternatives("B", prior, emptyMap()))
+        assertEquals(mapOf("F7" to "F8", "F11" to ClubMachines.REAR_KICK), ProgramAdaptation.alternatives("B", prior, mapOf("B:F2" to "F2")))
+        assertEquals(mapOf("F7" to "F8", "F2" to "F10", "F11" to ClubMachines.REAR_KICK),
             ProgramAdaptation.alternatives("B", mapOf("F7" to "F8"), mapOf("B:F2" to "F10", "A:F6" to "F19")))
     }
 

@@ -5,6 +5,12 @@ import org.junit.Test
 import java.time.*
 
 class RestAndRecordsTest {
+    @Test fun pauseResumePreservesRemainingTimeAndNeverRevivesExpiredRest() {
+        assertEquals(0L to 20000L, RestRules.toggle(120000, 0, 100000))
+        assertEquals(220000L to 0L, RestRules.toggle(0, 20000, 200000))
+        assertEquals(90000L to 0L, RestRules.toggle(90000, 0, 100000))
+        assertEquals(0L to 0L, RestRules.toggle(0, 0, 100000))
+    }
     private val e = Exercise("F1","Presse",2,10,15,120,"rép","","","","","")
     private val t = Training("current","A",1000,program=Programs.CYCLE)
     private val base = LoggedSet("F1",0,10.0,10,3,"Machine 1","Siège 2")

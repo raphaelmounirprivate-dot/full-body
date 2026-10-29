@@ -1,0 +1,13 @@
+{
+  "version": "0.9.0",
+  "versionCode": 13,
+  "optimizedApkSha256": "3f33828daee786040b9643b342b330b4d3a79db705b0f1a3539741de9c319bfe",
+  "bytes": 6913884,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedApkHashMatchesArtifact": true,
+  "rearKickPersonalSheetOpenedFromCatalogue": true,
+  "newBUsesRearKick": true,
+  "perLegInstructionsVisible": true,
+  "noFatalExceptionInProcessLog": true,
+  "physicalPhoneTested": false
+}

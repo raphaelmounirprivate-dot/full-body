@@ -19,7 +19,7 @@ interface MeasurementDao {
 
 data class PersonalOptions(
     val keepScreen: Boolean = true,
-    val guided: Boolean = false,
+    val guided: Boolean = true,
     val cycleReminder: Boolean = false,
     val level: String = "Débutant",
     val homeOrder: List<String> = FeatureRules.homeCards,

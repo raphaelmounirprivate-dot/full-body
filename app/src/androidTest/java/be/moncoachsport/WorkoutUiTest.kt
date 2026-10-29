@@ -108,7 +108,9 @@ class WorkoutUiTest {
     }
 
     @Test
-    fun correctedGuideShowsTheLegCurlCaption() {
+    fun correctedGuideShowsLegCurlOnMachineAndPreservesSourceAttribution() {
+        val vm = androidx.lifecycle.ViewModelProvider(compose.activity)[CoachViewModel::class.java]
+        org.junit.Assert.assertEquals("guide/corrections/F4-machine.webp", vm.guideExercises.first { it.id == "F4" }.image)
         compose.onNodeWithText("Exercices").performClick()
         compose.onNodeWithText("Jambes").performClick()
         compose
@@ -116,8 +118,9 @@ class WorkoutUiTest {
             .performScrollTo()
             .performClick()
         compose
-            .onNodeWithText("ce siège ne représente pas la machine", substring = true)
+            .onNodeWithText("jambes presque tendues sur la machine", substring = true)
             .assertExists()
+        compose.onNodeWithText("Le PDF source, page 12, conserve son ancien schéma sur chaise", substring = true).performScrollTo().assertExists()
         compose.onNodeWithText("F4, page 12", substring = true).assertExists()
     }
 
@@ -162,6 +165,8 @@ class WorkoutUiTest {
                 vm.cycleStart.value == 0L
         }
         vm.message.value = ""
+        vm.setPersonal { it.copy(guided = false) }
+        compose.waitUntil(10000) { !vm.personal.value.guided }
         compose.waitForIdle()
     }
 

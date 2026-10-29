@@ -75,6 +75,8 @@ internal fun SetEditor(
         }
     val haptic by vm.haptics.collectAsStateWithLifecycle()
     val view = androidx.compose.ui.platform.LocalView.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val nextPending =
         (0 until e.sets).firstOrNull { i ->
             active.sets.none { it.exerciseId == e.id && it.index == i && it.done }
@@ -266,6 +268,8 @@ internal fun SetEditor(
                 )
             if (Rules.validate(s)) {
                 error = ""
+                focus.clearFocus()
+                keyboard?.hide()
                 save(s)
                 if (haptic)
                     view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)

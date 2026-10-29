@@ -343,7 +343,7 @@ fun VariantChoices(t: Training, index: Int, vm: CoachViewModel) {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        "Le remplacement prend la place du mouvement, il ne s’ajoute pas. Commencer léger et suivre séparément la nouvelle machine (guide, p. 8)."
+                        "Le remplacement prend la place du mouvement, il ne s’ajoute pas. Commencer léger et suivre séparément la nouvelle machine. Les adaptations personnelles sont signalées dans leur description."
                     )
                     OutlinedButton(
                         onClick = {

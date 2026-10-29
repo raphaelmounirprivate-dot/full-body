@@ -131,7 +131,7 @@ abstract class SportDatabase : RoomDatabase() {
     }
 }
 
-private val Context.preferences by preferencesDataStore(name = "preferences")
+internal val Context.preferences by preferencesDataStore(name = "preferences")
 
 object Codec {
     fun encode(t: Training): String =
@@ -356,7 +356,17 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
     val cycleStart = prefs.data.map { it[longPreferencesKey("cycleStart")] ?: 0L }
 
     suspend fun preferCurrentGuide() {
-        prefs.edit { it[stringPreferencesKey("program")] = Programs.CYCLE }
+        prefs.edit {
+            it[stringPreferencesKey("program")] = Programs.CYCLE
+            val initialized = booleanPreferencesKey("focusedWorkoutV1")
+            if (it[initialized] != true) {
+                val key = stringPreferencesKey("personal")
+                val previous = it[key]?.let { raw -> PersonalCodec.decode(JSONObject(raw)) } ?: PersonalOptions()
+                it[key] = PersonalCodec.encode(previous.copy(guided = true)).toString()
+                it[booleanPreferencesKey("autoRest")] = true
+                it[initialized] = true
+            }
+        }
     }
 
     val autoRest = prefs.data.map { it[booleanPreferencesKey("autoRest")] ?: true }
@@ -401,6 +411,27 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
             it[longPreferencesKey("restPaused")] = paused
         }
     }
+
+    private suspend fun editCurrentTimer(expectedEnd: Long, expectedPaused: Long, change: (Long, Long) -> Pair<Long, Long>): Pair<Long, Long> {
+        var updated = 0L to 0L
+        prefs.edit {
+            val endKey = longPreferencesKey("restEnd")
+            val pausedKey = longPreferencesKey("restPaused")
+            updated = (it[endKey] ?: 0L) to (it[pausedKey] ?: 0L)
+            if (updated == (expectedEnd to expectedPaused)) {
+                updated = change(updated.first, updated.second)
+                it[endKey] = updated.first
+                it[pausedKey] = updated.second
+            }
+        }
+        return updated
+    }
+
+    suspend fun toggleTimer(expectedEnd: Long, expectedPaused: Long) =
+        editCurrentTimer(expectedEnd, expectedPaused) { end, paused -> RestRules.toggle(end, paused, System.currentTimeMillis()) }
+
+    suspend fun cancelTimer(expectedEnd: Long, expectedPaused: Long) =
+        editCurrentTimer(expectedEnd, expectedPaused) { _, _ -> 0L to 0L }
 
     suspend fun adjustTimer(seconds: Int): Pair<Long, Long> {
         var updated = 0L to 0L
@@ -490,7 +521,10 @@ class SportRepository(context: Context, database: SportDatabase? = null) {
     suspend fun eraseAll() {
         erase()
         db.measurements().clear()
-        prefs.edit { it.clear() }
+        prefs.edit {
+            it.clear()
+            it[booleanPreferencesKey("focusedWorkoutV1")] = true
+        }
     }
 
     fun close() = db.close()

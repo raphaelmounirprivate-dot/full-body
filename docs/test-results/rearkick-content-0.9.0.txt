@@ -1,0 +1,11 @@
+python.exe : ....
+Au caractère Ligne:2 : 203
++ ... xt -Tail 4; & 'C:/Users/Darkmoon/.cache/codex-runtimes/codex-primary- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (....:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.020s
+
+OK

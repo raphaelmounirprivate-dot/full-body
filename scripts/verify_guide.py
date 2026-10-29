@@ -75,5 +75,22 @@ class GuideTests(unittest.TestCase):
         self.assertIn('au maximum une fois par semaine',sections[3]['text'])
         self.assertIn('Ne monte pas aussi sa charge',sections[2]['text'])
 
+    def test_machine_correction_is_separate_from_preserved_source(self):
+        corrections=json.loads((ASSETS/'illustration-overrides.json').read_text('utf-8'))
+        self.assertEqual({'F4'},set(corrections))
+        correction=corrections['F4']
+        original=next(e for e in self.exercises if e['id']=='F4')
+        self.assertEqual(original['image'],correction['originalImage'])
+        self.assertEqual(original['imageSha256'],correction['originalImageSha256'])
+        self.assertIn('sur la machine',correction['caption'])
+        self.assertIn('ancien schéma sur chaise',correction['note'])
+        self.assertIn('Modèle générique',correction['note'])
+        for image_key,hash_key in [('image','imageSha256'),('sourceImage','sourceImageSha256')]:
+            path=ROOT/'app/src/main/assets'/correction[image_key] if image_key=='image' else ROOT/correction[image_key]
+            self.assertEqual(correction[hash_key],hashlib.sha256(path.read_bytes()).hexdigest())
+            with Image.open(path) as picture:
+                self.assertGreater(picture.width,1000)
+                self.assertAlmostEqual(picture.width/picture.height,1.5,places=2)
+
 
 if __name__=='__main__': unittest.main()

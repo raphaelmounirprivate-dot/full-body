@@ -1,6 +1,6 @@
 package be.moncoachsport
 
-/** Personal choices use existing guide variants; no historical prescription is rewritten. */
+/** Guide variants and an explicit personal replacement; historical sessions keep their own choices. */
 data class PreferredVariant(val template: String, val slot: String, val replacement: String) {
     val key get() = "$template:$slot"
 }
@@ -12,12 +12,17 @@ object ProgramAdaptation {
         PreferredVariant("B", "F2", "F10"),
         PreferredVariant("C", "F2", "F16"),
         PreferredVariant("A", "F6", "F19"),
+        PreferredVariant("B", "F11", ClubMachines.REAR_KICK),
     )
+
+    fun choiceValue(choice: PreferredVariant, prior: Map<String, String>, preferences: Map<String, String>): String =
+        preferences[choice.key] ?: prior[choice.slot] ?:
+            if (choice.replacement == ClubMachines.REAR_KICK) choice.replacement else choice.slot
 
     fun alternatives(template: String, prior: Map<String, String>, preferences: Map<String, String>): Map<String, String> =
         prior.toMutableMap().apply {
             choices.filter { it.template == template }.forEach { choice ->
-                when (preferences[choice.key]) {
+                when (choiceValue(choice, prior, preferences)) {
                     choice.slot -> remove(choice.slot)
                     choice.replacement -> put(choice.slot, choice.replacement)
                 }
@@ -29,7 +34,7 @@ object ProgramAdaptation {
         "F1" to "Quadriceps", "F7" to "Quadriceps", "F8" to "Quadriceps", "F18" to "Quadriceps",
         "F2" to "Pectoraux", "F10" to "Pectoraux", "F16" to "Pectoraux",
         "F3" to "Dos", "F9" to "Dos", "F14" to "Dos",
-        "F4" to "Ischio-jambiers", "F11" to "Fessiers", "F5" to "Épaules", "F15" to "Épaules",
+        "F4" to "Ischio-jambiers", "F11" to "Fessiers", ClubMachines.REAR_KICK to "Fessiers", "F5" to "Épaules", "F15" to "Épaules",
         "F6" to "Tronc", "F19" to "Tronc", "F12" to "Biceps", "F13" to "Triceps",
     )
 

@@ -1,0 +1,5 @@
+be.moncoachsport.WorkoutUiTest:.
+
+Time: 3.717
+
+OK (1 test)

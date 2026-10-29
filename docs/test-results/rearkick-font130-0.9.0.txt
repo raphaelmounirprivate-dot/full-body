@@ -1,0 +1,5 @@
+be.moncoachsport.RearKickTest:...
+
+Time: 6.955
+
+OK (3 tests)

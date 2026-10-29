@@ -1,0 +1,16 @@
+{
+  "version": "0.9.1",
+  "versionCode": 14,
+  "optimizedApkSha256": "705971efa2e580bebbce5c96819343a06b5cb70fd88da27db6bc453bc6fec194",
+  "bytes": 6913884,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedApkHashMatchesArtifact": true,
+  "singleExerciseByDefault": true,
+  "autoRestAfterValidation": true,
+  "clockVisibleAfterScrolling": true,
+  "advancedAfterTwoPersistedSets": true,
+  "normalLargeFontAndDarkCaptures": true,
+  "noFatalExceptionInProcessLog": true,
+  "physicalPhoneTested": false,
+  "dedicatedQaDemoDataReset": true
+}

@@ -101,7 +101,7 @@ fun WorkoutSettings(vm: CoachViewModel) {
             Switch(options.guided, { value -> vm.setPersonal { it.copy(guided = value) } },
                 modifier=Modifier.semantics { contentDescription="Enchaînement guidé" })
         }
-        Text("Après validation réussie : prochaine série, exercice suivant puis bilan. Le repos reste disponible.")
+        Text("Un exercice à la fois. Après validation réussie : prochaine série, exercice suivant puis bilan. Le chrono de repos reste fixé en bas de la séance.")
         Text("Mon niveau (indicatif)")
         FeatureRules.levels.forEach { level ->
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -1,0 +1,13 @@
+{
+  "version": "0.8.2",
+  "versionCode": 12,
+  "optimizedApkSha256": "210dc134daf7156175260dd85f89635a4703a781ed4abc85ff894c5c6ec3cda6",
+  "bytes": 6913884,
+  "device": "Sport_QA / Android 11 API 30",
+  "installedApkHashMatchesArtifact": true,
+  "correctedMachineImagePresentInApk": true,
+  "catalogueSheetAndZoomOpened": true,
+  "normalAndLargeFontCaptures": true,
+  "noFatalExceptionInProcessLog": true,
+  "physicalPhoneTested": false
+}

@@ -23,7 +23,7 @@ class RestUiTest {
         openWorkout()
         vm.setTimer(System.currentTimeMillis()+1000)
         compose.waitUntil(5000) { compose.onAllNodesWithText("Repos terminé ✓").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Repos terminé ✓").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Repos terminé ✓").assertIsDisplayed()
         compose.onNodeWithText("Pause").assertDoesNotExist()
         compose.waitUntil(6000) { vm.timer.value.first==0L }
         compose.onNodeWithText("Repos terminé ✓").assertDoesNotExist()
@@ -33,7 +33,7 @@ class RestUiTest {
         val end = System.currentTimeMillis()+120000
         vm.setTimer(end)
         compose.waitUntil(5000) { vm.timer.value.first==end }
-        compose.onNodeWithText("+30 s").performScrollTo().performClick()
+        compose.onNodeWithText("+30 s").assertIsDisplayed().performClick()
         compose.waitUntil(5000) { vm.timer.value.first==end+30000 }
         compose.onNodeWithText("−15 s").performClick()
         compose.waitUntil(5000) { vm.timer.value.first==end+15000 }
@@ -59,6 +59,10 @@ class RestUiTest {
         vm.log(LoggedSet("F1",0,20.0,12,3,"Presse test","Siège 3"))
         compose.waitUntil(10000) { vm.personalRecord.value?.result?.weight==true && vm.active?.sets?.singleOrNull()?.kg==20.0 }
         compose.onAllNodesWithText("Record personnel · charge").onFirst().assertExists()
+        compose.onNodeWithText("Pause").assertIsDisplayed()
+        val recordBottom = compose.onNodeWithText("Fermer le record").fetchSemanticsNode().boundsInRoot.bottom
+        val restTop = compose.onNodeWithText("Pause").fetchSemanticsNode().boundsInRoot.top
+        Assert.assertTrue("Le record ne doit pas masquer le chrono", recordBottom <= restTop)
         compose.onNodeWithText("Fermer le record").performClick()
         compose.waitUntil(5000) { vm.personalRecord.value==null }
     }
