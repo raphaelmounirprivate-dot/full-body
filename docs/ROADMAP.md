@@ -1,10 +1,12 @@
 # Suivi des fonctionnalités
 
-État du développement local 0.9.1, vérifié le 29 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
+État de la version publiée 0.9.1, vérifié le 29 octobre 2026. Une case cochée décrit du code présent ; le rapport de validation distingue les essais réellement exécutés.
 
 ## Priorité séance
 
 ### Parcours 0.9.1
+
+- [x] Code poussé, tests et lint GitHub réussis ; APK public, téléchargement et empreinte vérifiés ([preuve](github-publication-0.9.1.json)).
 
 - [x] Un exercice à la fois par défaut, prochaine série issue des données enregistrées ; passage suivant après deux séries ou le nombre configuré.
 - [x] Chrono hors de la zone défilante avec ajustements et pause, en modes guidé et liste.

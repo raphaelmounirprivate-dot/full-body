@@ -1,4 +1,4 @@
-# Mon Coach Sport — Android 0.9.1 locale / 0.8.1 publiée
+# Mon Coach Sport — Android 0.9.1
 
 Application Android native personnelle en français : Kotlin, Compose Material 3, Navigation Compose, MVVM, coroutines/Flow, Room et DataStore. Hors ligne, sans compte, publicité ni télémétrie. Aucune permission Internet. Android 8.0 minimum (API 26), compilation/cible API 36.
 
@@ -10,29 +10,29 @@ Le dépôt `full-body` regroupe le code Android, les tests, les ressources du gu
 
 ## Aperçu
 
-Pour tester l’application : [télécharger l’APK optimisé 0.8.1](https://github.com/raphaelmounirprivate-dot/full-body/releases/download/v0.8.1/Mon-Coach-Sport-0.8.1.apk) · [notes de version](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.8.1). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont publics ; aucune signature de distribution commerciale n’est fournie.
+Pour tester l’application : [télécharger l’APK optimisé 0.9.1](https://github.com/raphaelmounirprivate-dot/full-body/releases/download/v0.9.1/Mon-Coach-Sport-0.9.1.apk) · [notes de version](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.9.1). Il utilise la même clé de test que les versions précédentes et peut être installé par-dessus sans désinstallation. Faire une sauvegarde JSON avant mise à jour. Android 8.0 minimum. Le dépôt et ses téléchargements sont publics ; aucune signature de distribution commerciale n’est fournie.
 
-| Accueil | Séance et repos | Fiche d’exercice |
+| Séance guidée | Chrono après défilement | Exercice suivant |
 | --- | --- | --- |
-| ![Accueil de la version 0.8.0](docs/screenshots/accueil-0.8.0.png) | ![Séance avec minuteur et ajustements du repos](docs/screenshots/seance-0.8.0.png) | ![Fiche illustrée dans la version 0.8.0](docs/screenshots/fiche-0.8.0.png) |
+| ![Une série à la fois](docs/screenshots/seance-guidee-chrono-0.9.1.png) | ![Chrono toujours visible](docs/screenshots/chrono-visible-apres-defilement-0.9.1.png) | ![Passage au mouvement suivant](docs/screenshots/exercice-suivant-0.9.1.png) |
 
-Captures de l’APK optimisé 0.8.0 sur l’émulateur Android 11, avec des données de démonstration.
+Captures de l’APK optimisé 0.9.1 sur l’émulateur Android 11, avec des données de démonstration. Les captures suivantes illustrent les fonctions conservées depuis la version 0.8.0.
 
 | Notification sur écran verrouillé | Widget sur l’accueil Android |
 | --- | --- |
 | ![Décompte natif du repos sur l’écran verrouillé](docs/screenshots/repos-notification-verrouillee-0.8.0.png) | ![Widget Android avec séance et objectif hebdomadaire](docs/screenshots/widget-android-0.8.0.png) |
 
-État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation et captures en grande police : [résultats 0.8.0](docs/validation-0.8.0.md).
+État détaillé des fonctions : [suivi et tâches restantes](docs/ROADMAP.md). Validation et captures en grande police : [résultats 0.9.1](docs/validation-0.9.1.md).
 
 ## Développement
 
 Le projet est développé par étapes, en conservant les séances existantes et leurs paramètres. Voir [le développement et l’architecture](docs/DEVELOPPEMENT.md) et [l’historique des versions](CHANGELOG.md).
 
-Version locale 0.9.1 : **un seul exercice à la fois et chrono de repos fixé en bas**, sans remonter la page. Repos lancé après validation d’une nouvelle série ; après les séries prévues, passage à l’exercice suivant en conservant le repos en cours. Mode guidé et repos automatique activés une fois lors de la mise à jour, puis choix personnels conservés. Le mode liste reste accessible pour corriger les séries. [Validation et captures](docs/validation-0.9.1.md). APK local : `output/v0.9.1/Mon-Coach-Sport-0.9.1.apk` ; pas de publication GitHub 0.9.1 dans cette étape.
+La version publiée **0.9.1** affiche un seul exercice à la fois et fixe le chrono de repos en bas, sans remonter la page. Le repos démarre après validation d’une nouvelle série ; après les séries prévues, l’exercice suivant apparaît en conservant le repos en cours. Mode guidé et repos automatique sont activés une fois lors de la mise à jour, puis les choix personnels sont conservés. Le mode liste permet toujours de corriger les séries. [Validation et captures](docs/validation-0.9.1.md) · [publication et empreinte vérifiées](docs/github-publication-0.9.1.json).
 
-Version locale 0.9.0 : **Rear Kick machine en remplacement du hip thrust pour les nouvelles séances B**, fiche personnelle R1 et historique séparé. Point de départ : 2 × 10–15 par jambe, repos 90 s après les deux jambes ; une série se valide après les deux côtés. Le hip thrust reste dans les anciennes séances et peut être conservé dans les nouvelles via les préférences d’adaptation. Repères des machines photographiées : Chest Press et Low Row Technogym ; majorité du parc Technogym signalée par l’utilisateur. [Adaptation et sources](docs/rear-kick-et-machines.md) · [validation locale](docs/validation-0.9.0.md). L’APK local est préparé sous `output/v0.9.0/Mon-Coach-Sport-0.9.0.apk` ; aucune publication GitHub 0.9.0 n’a été effectuée.
+Cette publication inclut les adaptations développées en 0.9.0 : **Rear Kick machine à la place du hip thrust pour les nouvelles séances B**, fiche personnelle R1 et historique séparé. Une série se valide après les deux jambes ; le repos commun est de 90 s. Les anciennes séances gardent le hip thrust, qui reste aussi sélectionnable pour les prochaines séances. Les repères des machines photographiées Chest Press et Low Row Technogym sont documentés dans [l’adaptation et ses sources](docs/rear-kick-et-machines.md).
 
-Correction locale 0.8.2 : la fiche F4 utilise uniquement le visuel de machine sélectionné par l’utilisateur. [Visuel et provenance](docs/illustrations/F4-machine-prompt.md) · [validation locale](docs/validation-0.8.2.md). L’APK 0.8.2 est prêt dans `output/v0.8.2/Mon-Coach-Sport-0.8.2.apk` ; il n’est pas encore publié sur GitHub. Le téléchargement ci-dessus reste la version 0.8.1.
+Elle inclut également la correction F4 développée en 0.8.2 : seul le visuel de machine sélectionné par l’utilisateur est utilisé. [Visuel et provenance](docs/illustrations/F4-machine-prompt.md). Les versions intermédiaires 0.8.2 et 0.9.0 n’ont pas de publication APK séparée sur GitHub.
 
 La version 0.8.1 ajoute **Accueil → Adapter mes prochaines séances** : variantes déjà présentes dans le guide, après apprentissage, avec priorité aux machines et poulies. Elle affiche aussi le travail réellement effectué sur sept jours et demande un bilan avant une troisième série. Les séances en pause et l’historique gardent leurs paramètres. [Analyse du programme et sources](docs/programme-adapte.md) · [validation 0.8.1 et publication vérifiée](docs/validation-0.8.1.md).
 

@@ -48,4 +48,6 @@ Certificat de test inchangé : `040f1fd30560381354cac6610cc36828fbf6b4b7e255759c
 
 Room v4 et JSON 5/CSV 3 inchangés. Le marqueur interne focusedWorkoutV1 initialise une fois la présentation et le repos automatique ; il ne réactive ni les notifications ni leurs autorisations. Le mode liste et les choix ultérieurs restent disponibles. Les anciennes séances, variantes, séries, brouillons et réglages sont conservés. Le repos correspond à la série qui vient d’être validée et continue pendant l’affichage du mouvement suivant.
 
-APK local : `output/v0.9.1/Mon-Coach-Sport-0.9.1.apk`. Aucune publication GitHub 0.9.1 effectuée dans cette étape. Aucun essai sur téléphone physique revendiqué.
+APK local : `output/v0.9.1/Mon-Coach-Sport-0.9.1.apk`. [Publication GitHub 0.9.1](https://github.com/raphaelmounirprivate-dot/full-body/releases/tag/v0.9.1) vérifiée : téléchargement public et somme SHA-256 identiques au paquet testé, certificat de test conservé. [Preuve de publication](github-publication-0.9.1.json).
+
+Le [contrôle GitHub tests et lint](https://github.com/raphaelmounirprivate-dot/full-body/actions/runs/40841290986) a réussi pour le code source `c649e56ae48705617b537f4f3ef06007ebe1f9cd`. Aucun essai sur téléphone physique revendiqué.

@@ -1,6 +1,6 @@
 # Historique des versions
 
-## 0.9.1 — Séance guidée et chrono fixe (29 octobre 2026, local)
+## 0.9.1 — Séance guidée et chrono fixe (29 octobre 2026)
 
 - Un exercice et la prochaine série à la fois par défaut ; passage au mouvement suivant après les séries prévues, avec respect d’une troisième série configurée.
 - Chrono fixé en bas de la séance, avec Pause/Reprendre et −15 s / +30 s ; reste visible pendant le défilement en mode guidé ou liste.
